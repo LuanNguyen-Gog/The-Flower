@@ -210,6 +210,29 @@ public partial class SalesAppDBContext : DbContext
             entity.Property(e => e.Username)
                 .IsRequired()
                 .HasMaxLength(50);
+
+            entity.HasData(
+                new User
+                {
+                    UserId = 1,
+                    Username = "admin",
+                    PasswordHash = "$2a$11$Ws81kJjxnASgz4bsG7eKN.coK87b1QjKDskqxOFfM9IFDiXO1W9sO", // hashed "admin123"
+                    Email = "admin@gmail.com",
+                    Role = "Admin",
+                    PhoneNumber = "123456789",
+                    Address = "123 Admin St."
+                },
+                new User
+                {
+                    UserId = 2,
+                    Username = "customer",
+                    PasswordHash = "$2a$11$E7UkpQESpIH4pAIQPVfp7.4F7td5VyHcLA.87MJr.JLvPSWKVlgsy", // hashed "customer123"
+                    Email = "customer@gmail.com",
+                    Role = "Customer",
+                    PhoneNumber = "987654321",
+                    Address = "456 Customer Ave."
+                }
+            );
         });
 
         OnModelCreatingPartial(modelBuilder);
