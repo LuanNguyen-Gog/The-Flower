@@ -1,7 +1,7 @@
 using PayOS.Models.Webhooks;
 using Service.DTOs.Orders;
 
-namespace Service.Services;
+namespace Service.Services.Interfaces;
 
 public interface IOrderService
 {

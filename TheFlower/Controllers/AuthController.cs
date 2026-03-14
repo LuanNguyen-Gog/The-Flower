@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Service.DTOs.Auth;
-using Service.Services;
+using Service.Services.Interfaces;
 
 namespace TheFlower.Controllers;
 

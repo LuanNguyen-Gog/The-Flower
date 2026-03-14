@@ -1,8 +1,9 @@
-using Repository.Repositories;
+using Repository.Repositories.Interfaces;
 using Service.DTOs.Common;
 using Service.DTOs.Products;
+using Service.Services.Interfaces;
 
-namespace Service.Services;
+namespace Service.Services.Implementations;
 
 public class ProductService : IProductService
 {

@@ -1,7 +1,8 @@
-using Repository.Repositories;
+using Repository.Repositories.Interfaces;
 using Service.DTOs.Maps;
+using Service.Services.Interfaces;
 
-namespace Service.Services;
+namespace Service.Services.Implementations;
 
 public class StoreLocationService : IStoreLocationService
 {

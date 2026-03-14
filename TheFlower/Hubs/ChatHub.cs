@@ -2,7 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Service.DTOs.Chat;
-using Service.Services;
+using Service.Services.Interfaces;
 
 namespace TheFlower.Hubs;
 

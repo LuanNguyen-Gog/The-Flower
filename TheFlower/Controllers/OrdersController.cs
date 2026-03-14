@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PayOS.Models.Webhooks;
 using Service.DTOs.Orders;
-using Service.Services;
+using Service.Services.Interfaces;
 
 namespace TheFlower.Controllers;
 

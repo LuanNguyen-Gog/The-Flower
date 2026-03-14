@@ -4,10 +4,11 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Repository.Models;
-using Repository.Repositories;
+using Repository.Repositories.Interfaces;
 using Service.DTOs.Auth;
+using Service.Services.Interfaces;
 
-namespace Service.Services;
+namespace Service.Services.Implementations;
 
 public class AuthService : IAuthService
 {

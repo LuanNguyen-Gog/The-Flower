@@ -1,6 +1,6 @@
 using Service.DTOs.Chat;
 
-namespace Service.Services;
+namespace Service.Services.Interfaces;
 
 public interface IChatService
 {
