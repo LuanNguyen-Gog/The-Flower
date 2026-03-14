@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PayOS.Models.Webhooks;
 using Service.DTOs.Orders;
+using Service.DTOs.Response;
 using Service.Services.Interfaces;
 
 namespace TheFlower.Controllers;
@@ -25,18 +26,46 @@ public class OrdersController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize]
-    [ProducesResponseType(typeof(CreateOrderResponseDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(new ResponseDto
+            {
+                isSuccess = false,
+                Message = "Invalid input",
+                Data = ModelState
+            });
 
         try
         {
             var result = await _orderService.CreateOrderAsync(GetUserId(), dto);
-            return StatusCode(StatusCodes.Status201Created, result);
+            return StatusCode(StatusCodes.Status201Created, new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Order created successfully",
+                Data = result
+            });
         }
-        catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 
     /// <summary>
@@ -45,9 +74,29 @@ public class OrdersController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize]
-    [ProducesResponseType(typeof(IEnumerable<OrderDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOrders()
-        => Ok(await _orderService.GetOrdersByUserIdAsync(GetUserId()));
+    {
+        try
+        {
+            var orders = await _orderService.GetOrdersByUserIdAsync(GetUserId());
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Orders retrieved successfully",
+                Data = orders
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
 
     /// <summary>
     /// Xem chi tiết đơn hàng
@@ -55,12 +104,37 @@ public class OrdersController : ControllerBase
     /// </summary>
     [HttpGet("{id:int}")]
     [Authorize]
-    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrder(int id)
     {
-        var order = await _orderService.GetOrderByIdAsync(GetUserId(), id);
-        return order is null ? NotFound(new { message = "Order not found." }) : Ok(order);
+        try
+        {
+            var order = await _orderService.GetOrderByIdAsync(GetUserId(), id);
+            if (order is null)
+                return NotFound(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Order not found",
+                    Data = null
+                });
+
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Order retrieved successfully",
+                Data = order
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 
     /// <summary>
@@ -69,18 +143,37 @@ public class OrdersController : ControllerBase
     /// ⚠️ Không cần JWT — PayOS tự xác thực bằng checksum signature
     /// </summary>
     [HttpPost("payos-webhook")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> PayOsWebhook([FromBody] Webhook webhookBody)
     {
         try
         {
             await _orderService.HandlePayOsWebhookAsync(webhookBody);
-            return Ok(new { message = "Webhook processed successfully." });
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Webhook processed successfully",
+                Data = null
+            });
         }
         catch (UnauthorizedAccessException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
         }
     }
 }

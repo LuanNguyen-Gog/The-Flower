@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.DTOs.Cart;
+using Service.DTOs.Response;
 using Service.Services.Interfaces;
 
 namespace TheFlower.Controllers;
@@ -23,29 +24,85 @@ public class CartsController : ControllerBase
     /// GET /api/carts
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCart()
-        => Ok(await _cartService.GetCartAsync(GetUserId()));
+    {
+        try
+        {
+            var cart = await _cartService.GetCartAsync(GetUserId());
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Cart retrieved successfully",
+                Data = cart
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
 
     /// <summary>
     /// Thêm sản phẩm vào giỏ hàng
     /// POST /api/carts/items
     /// </summary>
     [HttpPost("items")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddItem([FromBody] AddToCartDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(new ResponseDto
+            {
+                isSuccess = false,
+                Message = "Invalid input",
+                Data = ModelState
+            });
 
         try
         {
             var cart = await _cartService.AddItemAsync(GetUserId(), dto);
-            return Ok(cart);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Item added to cart successfully",
+                Data = cart
+            });
         }
-        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
-        catch (InvalidOperationException ex) { return BadRequest(new { message = ex.Message }); }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 
     /// <summary>
@@ -53,20 +110,51 @@ public class CartsController : ControllerBase
     /// PUT /api/carts/items/{cartItemId}
     /// </summary>
     [HttpPut("items/{cartItemId:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateItem(int cartItemId, [FromBody] UpdateCartItemDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(new ResponseDto
+            {
+                isSuccess = false,
+                Message = "Invalid input",
+                Data = ModelState
+            });
 
         try
         {
             var cart = await _cartService.UpdateItemQuantityAsync(GetUserId(), cartItemId, dto);
-            return Ok(cart);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Item quantity updated successfully",
+                Data = cart
+            });
         }
-        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
-        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 
     /// <summary>
@@ -74,17 +162,42 @@ public class CartsController : ControllerBase
     /// DELETE /api/carts/items/{cartItemId}
     /// </summary>
     [HttpDelete("items/{cartItemId:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RemoveItem(int cartItemId)
     {
         try
         {
             var cart = await _cartService.RemoveItemAsync(GetUserId(), cartItemId);
-            return Ok(cart);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Item removed from cart successfully",
+                Data = cart
+            });
         }
-        catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
-        catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 
     /// <summary>
@@ -92,10 +205,27 @@ public class CartsController : ControllerBase
     /// DELETE /api/carts
     /// </summary>
     [HttpDelete]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> ClearCart()
     {
-        await _cartService.ClearCartAsync(GetUserId());
-        return NoContent();
+        try
+        {
+            await _cartService.ClearCartAsync(GetUserId());
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Cart cleared successfully",
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 }

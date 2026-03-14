@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.DTOs.Chat;
+using Service.DTOs.Response;
 using Service.Services.Interfaces;
 
 namespace TheFlower.Controllers;
@@ -23,13 +24,30 @@ public class ChatsController : ControllerBase
     /// GET /api/chats/messages?page=1&pageSize=20
     /// </summary>
     [HttpGet("messages")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMessages(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        var messages = await _chatService.GetMessagesAsync(GetUserId(), page, pageSize);
-        return Ok(messages);
+        try
+        {
+            var messages = await _chatService.GetMessagesAsync(GetUserId(), page, pageSize);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Messages retrieved successfully",
+                Data = messages
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 
     /// <summary>
@@ -37,13 +55,36 @@ public class ChatsController : ControllerBase
     /// POST /api/chats/messages
     /// </summary>
     [HttpPost("messages")]
-    [ProducesResponseType(typeof(ChatMessageDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(new ResponseDto
+            {
+                isSuccess = false,
+                Message = "Invalid input",
+                Data = ModelState
+            });
 
-        var message = await _chatService.SendMessageAsync(GetUserId(), dto);
-        return StatusCode(StatusCodes.Status201Created, message);
+        try
+        {
+            var message = await _chatService.SendMessageAsync(GetUserId(), dto);
+            return StatusCode(StatusCodes.Status201Created, new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Message sent successfully",
+                Data = message
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 }
