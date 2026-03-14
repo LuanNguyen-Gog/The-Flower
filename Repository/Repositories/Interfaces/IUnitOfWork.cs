@@ -9,6 +9,7 @@ public interface IUnitOfWork : IDisposable
     INotificationRepository Notifications { get; }
     IChatRepository Chats { get; }
     IStoreLocationRepository StoreLocations { get; }
+    IOtpRepository Otps { get; }
 
     Task<int> SaveChangesAsync();
     Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> operation);

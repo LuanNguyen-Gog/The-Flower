@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Service.DTOs.Products;
+using Service.DTOs.Response;
 using Service.Services.Interfaces;
 
 namespace TheFlower.Controllers;
@@ -18,21 +19,66 @@ public class ProductsController : ControllerBase
     /// GET /api/products?page=1&pageSize=10&categoryId=1&minPrice=50000&maxPrice=500000&sortBy=price&sortOrder=asc
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetProducts([FromQuery] ProductQueryDto query)
-        => Ok(await _productService.GetProductsAsync(query));
+    {
+        try
+        {
+            var result = await _productService.GetProductsAsync(query);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Products retrieved successfully",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
 
     /// <summary>
     /// Xem chi tiết một loại hoa
     /// GET /api/products/{id}
     /// </summary>
     [HttpGet("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetProduct(int id)
     {
-        var product = await _productService.GetProductByIdAsync(id);
-        return product is null ? NotFound(new { message = "Product not found." }) : Ok(product);
+        try
+        {
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product is null)
+                return NotFound(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Product not found",
+                    Data = null
+                });
+
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Product retrieved successfully",
+                Data = product
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 
     /// <summary>
@@ -40,7 +86,27 @@ public class ProductsController : ControllerBase
     /// GET /api/products/categories
     /// </summary>
     [HttpGet("categories")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCategories()
-        => Ok(await _productService.GetCategoriesAsync());
+    {
+        try
+        {
+            var result = await _productService.GetCategoriesAsync();
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Categories retrieved successfully",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
 }

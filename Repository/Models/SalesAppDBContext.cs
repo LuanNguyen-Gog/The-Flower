@@ -33,6 +33,8 @@ public partial class SalesAppDBContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<OtpVerification> OtpVerifications { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Cart>(entity =>
@@ -210,6 +212,15 @@ public partial class SalesAppDBContext : DbContext
             entity.Property(e => e.Username)
                 .IsRequired()
                 .HasMaxLength(50);
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("Pending");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
 
             entity.HasData(
                 new User
@@ -220,7 +231,9 @@ public partial class SalesAppDBContext : DbContext
                     Email = "admin@gmail.com",
                     Role = "Admin",
                     PhoneNumber = "123456789",
-                    Address = "123 Admin St."
+                    Address = "123 Admin St.",
+                    Status = "Active",
+                    CreatedAt = new DateTime(2026, 3, 1)
                 },
                 new User
                 {
@@ -230,9 +243,35 @@ public partial class SalesAppDBContext : DbContext
                     Email = "customer@gmail.com",
                     Role = "Customer",
                     PhoneNumber = "987654321",
-                    Address = "456 Customer Ave."
+                    Address = "456 Customer Ave.",
+                    Status = "Active",
+                    CreatedAt = new DateTime(2026, 3, 1)
                 }
             );
+        });
+
+        modelBuilder.Entity<OtpVerification>(entity =>
+        {
+            entity.HasKey(e => e.OtpId);
+
+            entity.Property(e => e.OtpId).HasColumnName("OtpID");
+            entity.Property(e => e.Email)
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(e => e.OtpCode)
+                .IsRequired()
+                .HasMaxLength(6);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ExpiresAt).HasColumnType("datetime");
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
+            entity.Property(e => e.UsedAt).HasColumnType("datetime");
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

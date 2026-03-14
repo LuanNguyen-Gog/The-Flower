@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Service.DTOs.Response;
 using Service.Services.Interfaces;
 
 namespace TheFlower.Controllers;
@@ -17,20 +18,65 @@ public class MapsController : ControllerBase
     /// GET /api/maps/stores
     /// </summary>
     [HttpGet("stores")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStores()
-        => Ok(await _locationService.GetAllAsync());
+    {
+        try
+        {
+            var stores = await _locationService.GetAllAsync();
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Stores retrieved successfully",
+                Data = stores
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
 
     /// <summary>
     /// Lấy chi tiết một cửa hàng theo ID
     /// GET /api/maps/stores/{id}
     /// </summary>
     [HttpGet("stores/{id:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStore(int id)
     {
-        var store = await _locationService.GetByIdAsync(id);
-        return store is null ? NotFound(new { message = "Store not found." }) : Ok(store);
+        try
+        {
+            var store = await _locationService.GetByIdAsync(id);
+            if (store is null)
+                return NotFound(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Store not found.",
+                    Data = null
+                });
+
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Store retrieved successfully",
+                Data = store
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
     }
 }
