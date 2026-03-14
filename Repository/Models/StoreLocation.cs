@@ -14,4 +14,6 @@ public partial class StoreLocation
     public decimal Longitude { get; set; }
 
     public string Address { get; set; }
+
+    public string Status { get; set; } = "Active";
 }

@@ -15,5 +15,7 @@ public partial class ChatMessage
 
     public DateTime SentAt { get; set; }
 
+    public string Status { get; set; } = "Active";
+
     public virtual User User { get; set; }
 }

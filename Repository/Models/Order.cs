@@ -21,6 +21,8 @@ public partial class Order
 
     public DateTime OrderDate { get; set; }
 
+    public string Status { get; set; } = "Active";
+
     public virtual Cart Cart { get; set; }
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();

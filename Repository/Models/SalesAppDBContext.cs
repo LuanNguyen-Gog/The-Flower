@@ -35,6 +35,15 @@ public partial class SalesAppDBContext : DbContext
 
     public virtual DbSet<OtpVerification> OtpVerifications { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Server=localhost;Database=SalesAppDB;User Id=sa;Password=12345;TrustServerCertificate=true;MultipleActiveResultSets=true;");
+        }
+        base.OnConfiguring(optionsBuilder);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Cart>(entity =>
@@ -42,9 +51,6 @@ public partial class SalesAppDBContext : DbContext
             entity.HasKey(e => e.CartId).HasName("PK__Carts__51BCD797F0DB6A45");
 
             entity.Property(e => e.CartId).HasColumnName("CartID");
-            entity.Property(e => e.Status)
-                .IsRequired()
-                .HasMaxLength(50);
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
