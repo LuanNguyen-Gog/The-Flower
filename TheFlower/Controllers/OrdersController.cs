@@ -99,6 +99,35 @@ public class OrdersController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy đơn hàng của một user cụ thể (sắp xếp từ mới nhất)
+    /// GET /api/orders/user/{userId}
+    /// </summary>
+    [HttpGet("user/{userId:int}")]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetOrdersByUserId(int userId)
+    {
+        try
+        {
+            var orders = await _orderService.GetOrdersByUserIdAsync(userId);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Orders retrieved successfully",
+                Data = orders
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
+
+    /// <summary>
     /// Xem chi tiết đơn hàng
     /// GET /api/orders/{id}
     /// </summary>

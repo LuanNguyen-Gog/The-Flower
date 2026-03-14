@@ -25,4 +25,14 @@ public class ChatRepository : IChatRepository
         await _context.SaveChangesAsync();
         return message;
     }
+
+    public async Task BatchSaveAsync(IEnumerable<ChatMessage> messages)
+    {
+        var messageList = messages.ToList();
+        if (messageList.Count == 0)
+            return;
+
+        _context.ChatMessages.AddRange(messageList);
+        await _context.SaveChangesAsync();
+    }
 }

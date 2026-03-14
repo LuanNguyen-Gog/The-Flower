@@ -8,6 +8,7 @@ using PayOS.Resources.Webhooks;
 using Repository.Models;
 using Repository.Repositories.Interfaces;
 using Service.DTOs.Orders;
+using Service.EmailTemplates;
 using Service.Services.Interfaces;
 
 namespace Service.Services.Implementations;
@@ -16,18 +17,27 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly ICartRepository _cartRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
+    private readonly INotificationService _notificationService;
     private readonly PayOSClient _payOsClient;
 
     public OrderService(
         IOrderRepository orderRepository,
         ICartRepository cartRepository,
+        IUserRepository userRepository,
         IUnitOfWork unitOfWork,
+        IEmailService emailService,
+        INotificationService notificationService,
         IConfiguration configuration)
     {
         _orderRepository = orderRepository;
         _cartRepository = cartRepository;
+        _userRepository = userRepository;
         _unitOfWork = unitOfWork;
+        _emailService = emailService;
+        _notificationService = notificationService;
 
         var cfg = configuration.GetSection("PayOS");
         _payOsClient = new PayOSClient(new PayOSOptions
@@ -40,70 +50,141 @@ public class OrderService : IOrderService
 
     public async Task<CreateOrderResponseDto> CreateOrderAsync(int userId, CreateOrderDto dto)
     {
-        return await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        try
         {
-            var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId)
-                ?? throw new InvalidOperationException("No active cart found.");
+            // Validate input
+            if (string.IsNullOrWhiteSpace(dto.BillingAddress))
+                throw new InvalidOperationException("Billing address is required.");
 
-            if (!cart.CartItems.Any())
-                throw new InvalidOperationException("Cart is empty.");
+            if (dto.PaymentMethod.Equals("PayOS", StringComparison.OrdinalIgnoreCase) 
+                && (string.IsNullOrWhiteSpace(dto.ReturnUrl) || string.IsNullOrWhiteSpace(dto.CancelUrl)))
+                throw new InvalidOperationException("Return URL and Cancel URL are required for PayOS payment.");
 
-            // Create order
-            var order = await _orderRepository.CreateAsync(new Order
+            return await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                CartId = cart.CartId,
-                UserId = userId,
-                PaymentMethod = dto.PaymentMethod,
-                BillingAddress = dto.BillingAddress,
-                OrderStatus = "Pending",
-                OrderDate = DateTime.UtcNow
-            });
+                var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId)
+                    ?? throw new InvalidOperationException("No active cart found.");
 
-            // Create payment record
-            await _orderRepository.CreatePaymentAsync(new Payment
-            {
-                OrderId = order.OrderId,
-                Amount = cart.TotalPrice,
-                PaymentDate = DateTime.UtcNow,
-                PaymentStatus = "Pending"
-            });
+                if (!cart.CartItems.Any())
+                    throw new InvalidOperationException("Cart is empty.");
 
-            // Update cart status
-            await _cartRepository.UpdateCartStatusAsync(cart.CartId, "CheckedOut");
+                // Validate cart data
+                if (cart.TotalPrice <= 0)
+                    throw new InvalidOperationException("Cart total price is invalid.");
 
-            // Handle payment method
-            string? paymentUrl = null;
+                if (cart.CartItems.Any(ci => ci.Product is null))
+                    throw new InvalidOperationException("Cart contains invalid product(s).");
 
-            if (dto.PaymentMethod.Equals("PayOS", StringComparison.OrdinalIgnoreCase))
-            {
-                paymentUrl = await CreatePayOsLinkAsync(order.OrderId, cart, dto);
-            }
-            else
-            {
-                // COD payment
-                order.OrderStatus = "Confirmed";
-                await _orderRepository.UpdateOrderAsync(order);
-
-                var payment = await _orderRepository.GetPaymentByOrderIdAsync(order.OrderId);
-                if (payment is not null)
+                // Create order
+                var order = await _orderRepository.CreateAsync(new Order
                 {
-                    payment.PaymentStatus = "COD";
-                    await _orderRepository.UpdatePaymentAsync(payment);
+                    CartId = cart.CartId,
+                    UserId = userId,
+                    PaymentMethod = dto.PaymentMethod,
+                    BillingAddress = dto.BillingAddress,
+                    OrderStatus = "Pending",
+                    OrderDate = DateTime.UtcNow
+                });
+
+                // Create payment record
+                await _orderRepository.CreatePaymentAsync(new Payment
+                {
+                    OrderId = order.OrderId,
+                    Amount = cart.TotalPrice,
+                    PaymentDate = DateTime.UtcNow,
+                    PaymentStatus = "Pending"
+                });
+
+                // Update cart status to CheckedOut
+                await _cartRepository.UpdateCartStatusAsync(cart.CartId, "CheckedOut");
+
+                // Handle payment method
+                string? paymentUrl = null;
+
+                if (dto.PaymentMethod.Equals("PayOS", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        paymentUrl = await CreatePayOsLinkAsync(order.OrderId, cart, dto);
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        throw new InvalidOperationException("Failed to connect to PayOS service. Please try again later.", ex);
+                    }
+                    catch (PayOSException ex)
+                    {
+                        throw new InvalidOperationException($"PayOS error: {ex.Message}", ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException("An unexpected error occurred while creating PayOS payment link.", ex);
+                    }
                 }
-            }
+                else
+                {
+                    // COD payment
+                    order.OrderStatus = "Confirmed";
+                    await _orderRepository.UpdateOrderAsync(order);
 
-            // Save all changes
-            await _unitOfWork.SaveChangesAsync();
+                    var payment = await _orderRepository.GetPaymentByOrderIdAsync(order.OrderId);
+                    if (payment is not null)
+                    {
+                        payment.PaymentStatus = "COD";
+                        await _orderRepository.UpdatePaymentAsync(payment);
+                    }
 
-            return new CreateOrderResponseDto
-            {
-                OrderId = order.OrderId,
-                OrderStatus = order.OrderStatus,
-                PaymentMethod = order.PaymentMethod,
-                TotalAmount = cart.TotalPrice,
-                PaymentUrl = paymentUrl
-            };
-        });
+                    // Send COD email and create notification
+                    var user = await _userRepository.GetByIdAsync(userId);
+                    if (user is not null && !string.IsNullOrEmpty(user.Email))
+                    {
+                        var template = new OrderCodConfirmationTemplate(order);
+                        try
+                        {
+                            await _emailService.SendEmailAsync(
+                                user.Email,
+                                template.GetSubject(),
+                                template.GetHtmlBody(),
+                                isHtml: true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to send COD email: {ex.Message}");
+                        }
+                    }
+
+                    try
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            userId,
+                            $"Đơn hàng #{order.OrderId} đã được xác nhận! Sẽ giao hàng tại địa chỉ: {order.BillingAddress}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to send COD notification: {ex.Message}");
+                    }
+                }
+
+                // Save all changes
+                await _unitOfWork.SaveChangesAsync();
+
+                return new CreateOrderResponseDto
+                {
+                    OrderId = order.OrderId,
+                    OrderStatus = order.OrderStatus,
+                    PaymentMethod = order.PaymentMethod,
+                    TotalAmount = cart.TotalPrice,
+                    PaymentUrl = paymentUrl
+                };
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("An unexpected error occurred while creating the order. Please try again later.", ex);
+        }
     }
 
     public async Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(int userId)
@@ -147,6 +228,59 @@ public class OrderService : IOrderService
             {
                 payment.PaymentStatus = isSuccess ? "Success" : "Failed";
                 await _orderRepository.UpdatePaymentAsync(payment);
+            }
+
+            // Soft-delete cart and update stock when payment successful
+            if (isSuccess && order.CartId.HasValue)
+            {
+                await _cartRepository.UpdateCartStatusAsync(order.CartId.Value, "Payed");
+
+                // Update stock quantity for each product in cart
+                if (order.Cart?.CartItems.Any() == true)
+                {
+                    foreach (var cartItem in order.Cart.CartItems)
+                    {
+                        if (cartItem.Product is not null)
+                        {
+                            cartItem.Product.StockQuantity = (cartItem.Product.StockQuantity ?? 0) - cartItem.Quantity;
+                        }
+                    }
+                }
+
+                // Send success email to user
+                if (order.User is not null && !string.IsNullOrEmpty(order.User.Email))
+                {
+                    var template = new OrderPaymentSuccessTemplate(order);
+                    try
+                    {
+                        await _emailService.SendEmailAsync(
+                            order.User.Email,
+                            template.GetSubject(),
+                            template.GetHtmlBody(),
+                            isHtml: true);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log email error but don't throw - don't want to fail order if email fails
+                        Console.WriteLine($"Failed to send email: {ex.Message}");
+                    }
+                }
+
+                // Create success notification
+                if (order.UserId.HasValue)
+                {
+                    try
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            order.UserId.Value,
+                            $"Đơn hàng #{order.OrderId} thanh toán thành công!");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log notification error but don't throw
+                        Console.WriteLine($"Failed to create notification: {ex.Message}");
+                    }
+                }
             }
 
             // Save all changes

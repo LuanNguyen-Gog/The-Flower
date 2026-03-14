@@ -23,6 +23,13 @@ public class NotificationRepository : INotificationRepository
     public async Task<Notification?> GetByIdAsync(int id)
         => await _context.Notifications.FindAsync(id);
 
+    public async Task<Notification> CreateAsync(Notification notification)
+    {
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
+        return notification;
+    }
+
     public async Task MarkAsReadAsync(int notificationId)
     {
         var notification = await _context.Notifications.FindAsync(notificationId);
@@ -36,5 +43,13 @@ public class NotificationRepository : INotificationRepository
         await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+    }
+
+    public async Task DeleteAsync(int notificationId)
+    {
+        var notification = await _context.Notifications.FindAsync(notificationId);
+        if (notification is null) return;
+        _context.Notifications.Remove(notification);
+        await _context.SaveChangesAsync();
     }
 }

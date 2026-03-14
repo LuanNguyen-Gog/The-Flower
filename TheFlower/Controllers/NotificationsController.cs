@@ -154,4 +154,53 @@ public class NotificationsController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Xóa một thông báo
+    /// DELETE /api/notifications/{id}
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> DeleteNotification(int id)
+    {
+        try
+        {
+            await _notificationService.DeleteNotificationAsync(GetUserId(), id);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Notification deleted successfully",
+                Data = null
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new ResponseDto
+            {
+                isSuccess = false,
+                Message = "Access denied",
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Configuration;
 using Service.Services.Interfaces;
+using Service.EmailTemplates;
 
 namespace Service.Services.Implementations;
 
@@ -54,43 +55,7 @@ public class EmailService : IEmailService
 
     public async Task SendOtpEmailAsync(string toEmail, string otpCode)
     {
-        var subject = "The Flower - Xác Minh OTP";
-        var body = $@"
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <style>
-                    body {{ font-family: Arial, sans-serif; background-color: #f5f5f5; }}
-                    .container {{ max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-                    .header {{ text-align: center; color: #333; margin-bottom: 30px; }}
-                    .header h1 {{ margin: 0; color: #e91e63; }}
-                    .content {{ text-align: center; }}
-                    .otp-code {{ font-size: 32px; font-weight: bold; color: #e91e63; letter-spacing: 5px; margin: 30px 0; font-family: monospace; }}
-                    .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 12px; }}
-                    .warning {{ color: #ff6b6b; margin-top: 20px; font-size: 14px; }}
-                </style>
-            </head>
-            <body>
-                <div class=""container"">
-                    <div class=""header"">
-                        <h1>🌸 The Flower</h1>
-                    </div>
-                    <div class=""content"">
-                        <p>Xin chào,</p>
-                        <p>Bạn đã yêu cầu xác minh địa chỉ email. Vui lòng sử dụng mã OTP bên dưới để hoàn thành quá trình đăng ký:</p>
-                        <div class=""otp-code"">{otpCode}</div>
-                        <p>Mã OTP này sẽ hết hạn trong <strong>10 phút</strong>.</p>
-                        <div class=""warning"">
-                            ⚠️ Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này.
-                        </div>
-                    </div>
-                    <div class=""footer"">
-                        <p>&copy; 2026 The Flower. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>";
-
-        await SendEmailAsync(toEmail, subject, body, isHtml: true);
+        var template = new OtpVerificationTemplate(otpCode);
+        await SendEmailAsync(toEmail, template.GetSubject(), template.GetHtmlBody(), isHtml: true);
     }
 }

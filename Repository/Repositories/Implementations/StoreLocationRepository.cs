@@ -15,4 +15,29 @@ public class StoreLocationRepository : IStoreLocationRepository
 
     public async Task<StoreLocation?> GetByIdAsync(int id)
         => await _context.StoreLocations.FindAsync(id);
+
+    public async Task<StoreLocation> CreateAsync(StoreLocation location)
+    {
+        _context.StoreLocations.Add(location);
+        await _context.SaveChangesAsync();
+        return location;
+    }
+
+    public async Task<bool> UpdateAsync(StoreLocation location)
+    {
+        _context.StoreLocations.Update(location);
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var location = await _context.StoreLocations.FindAsync(id);
+        if (location == null)
+            return false;
+
+        location.Status = "InActive";
+        _context.StoreLocations.Update(location);
+        return await _context.SaveChangesAsync() > 0;
+    }
 }
+

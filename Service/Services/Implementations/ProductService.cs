@@ -1,4 +1,5 @@
 using Repository.Repositories.Interfaces;
+using Repository.Models;
 using Service.DTOs.Common;
 using Service.DTOs.Products;
 using Service.Services.Interfaces;
@@ -69,5 +70,60 @@ public class ProductService : IProductService
             CategoryId = c.CategoryId,
             CategoryName = c.CategoryName
         });
+    }
+
+    public async Task<ProductDetailDto> CreateProductAsync(CreateProductDto dto)
+    {
+        var product = new Product
+        {
+            ProductName = dto.ProductName,
+            BriefDescription = dto.BriefDescription,
+            FullDescription = dto.FullDescription,
+            TechnicalSpecifications = dto.TechnicalSpecifications,
+            Price = dto.Price,
+            ImageUrl = dto.ImageUrl,
+            CategoryId = dto.CategoryId,
+            StockQuantity = dto.StockQuantity,
+            Status = "Active"
+        };
+
+        var createdProduct = await _productRepository.CreateAsync(product);
+
+        return new ProductDetailDto
+        {
+            ProductId = createdProduct.ProductId,
+            ProductName = createdProduct.ProductName,
+            BriefDescription = createdProduct.BriefDescription,
+            FullDescription = createdProduct.FullDescription,
+            TechnicalSpecifications = createdProduct.TechnicalSpecifications,
+            Price = createdProduct.Price,
+            ImageUrl = createdProduct.ImageUrl,
+            CategoryId = createdProduct.CategoryId ?? 0,
+            CategoryName = string.Empty,
+            StockQuantity = createdProduct.StockQuantity ?? 0
+        };
+    }
+
+    public async Task<bool> UpdateProductAsync(UpdateProductDto dto)
+    {
+        var existingProduct = await _productRepository.GetByIdAsync(dto.ProductId);
+        if (existingProduct is null)
+            return false;
+
+        existingProduct.ProductName = dto.ProductName;
+        existingProduct.BriefDescription = dto.BriefDescription;
+        existingProduct.FullDescription = dto.FullDescription;
+        existingProduct.TechnicalSpecifications = dto.TechnicalSpecifications;
+        existingProduct.Price = dto.Price;
+        existingProduct.ImageUrl = dto.ImageUrl;
+        existingProduct.CategoryId = dto.CategoryId;
+        existingProduct.StockQuantity = dto.StockQuantity;
+
+        return await _productRepository.UpdateAsync(existingProduct);
+    }
+
+    public async Task<bool> DeleteProductAsync(int id)
+    {
+        return await _productRepository.DeleteAsync(id);
     }
 }
