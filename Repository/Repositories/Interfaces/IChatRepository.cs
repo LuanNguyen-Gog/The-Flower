@@ -1,6 +1,6 @@
 using Repository.Models;
 
-namespace Repository.Repositories;
+namespace Repository.Repositories.Interfaces;
 
 public interface IChatRepository
 {

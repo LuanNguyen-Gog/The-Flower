@@ -1,6 +1,6 @@
 using Service.DTOs.Cart;
 
-namespace Service.Services;
+namespace Service.Services.Interfaces;
 
 public interface ICartService
 {

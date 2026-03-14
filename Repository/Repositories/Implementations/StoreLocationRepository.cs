@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Repository.Models;
+using Repository.Repositories.Interfaces;
 
-namespace Repository.Repositories;
+namespace Repository.Repositories.Implementations;
 
 public class StoreLocationRepository : IStoreLocationRepository
 {

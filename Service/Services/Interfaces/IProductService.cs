@@ -1,7 +1,7 @@
 using Service.DTOs.Common;
 using Service.DTOs.Products;
 
-namespace Service.Services;
+namespace Service.Services.Interfaces;
 
 public interface IProductService
 {

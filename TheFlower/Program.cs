@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Repository.Models;
-using Repository.Repositories;
-using Service.Services;
+using Repository.Repositories.Interfaces;
+using Repository.Repositories.Implementations;
+using Service.Services.Interfaces;
+using Service.Services.Implementations;
 using TheFlower.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,7 +16,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<SalesAppDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ── Repository DI ─────────────────────────────────────────────────────────────
+// ── Unit of Work & Repository DI ──────────────────────────────────────────────
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Individual repositories (optional, can use UnitOfWork instead)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();

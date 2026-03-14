@@ -1,6 +1,6 @@
 using Service.DTOs.Notifications;
 
-namespace Service.Services;
+namespace Service.Services.Interfaces;
 
 public interface INotificationService
 {

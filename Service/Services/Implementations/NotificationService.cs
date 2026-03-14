@@ -1,7 +1,8 @@
-using Repository.Repositories;
+using Repository.Repositories.Interfaces;
 using Service.DTOs.Notifications;
+using Service.Services.Interfaces;
 
-namespace Service.Services;
+namespace Service.Services.Implementations;
 
 public class NotificationService : INotificationService
 {

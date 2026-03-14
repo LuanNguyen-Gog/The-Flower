@@ -1,6 +1,6 @@
 using Service.DTOs.Maps;
 
-namespace Service.Services;
+namespace Service.Services.Interfaces;
 
 public interface IStoreLocationService
 {

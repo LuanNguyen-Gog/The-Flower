@@ -1,18 +1,21 @@
 using Repository.Models;
-using Repository.Repositories;
+using Repository.Repositories.Interfaces;
 using Service.DTOs.Cart;
+using Service.Services.Interfaces;
 
-namespace Service.Services;
+namespace Service.Services.Implementations;
 
 public class CartService : ICartService
 {
     private readonly ICartRepository _cartRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CartService(ICartRepository cartRepository, IProductRepository productRepository)
+    public CartService(ICartRepository cartRepository, IProductRepository productRepository, IUnitOfWork unitOfWork)
     {
         _cartRepository = cartRepository;
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<CartDto> GetCartAsync(int userId)
@@ -24,35 +27,40 @@ public class CartService : ICartService
 
     public async Task<CartDto> AddItemAsync(int userId, AddToCartDto dto)
     {
-        var product = await _productRepository.GetByIdAsync(dto.ProductId)
-            ?? throw new KeyNotFoundException("Product not found.");
-
-        if ((product.StockQuantity ?? 0) < dto.Quantity)
-            throw new InvalidOperationException("Insufficient stock.");
-
-        var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId)
-            ?? await _cartRepository.CreateCartAsync(userId);
-
-        var existingItem = await _cartRepository.GetCartItemAsync(cart.CartId, dto.ProductId);
-
-        if (existingItem is not null)
+        return await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
-            existingItem.Quantity += dto.Quantity;
-            await _cartRepository.UpdateCartItemAsync(existingItem);
-        }
-        else
-        {
-            await _cartRepository.AddCartItemAsync(new CartItem
+            var product = await _productRepository.GetByIdAsync(dto.ProductId)
+                ?? throw new KeyNotFoundException("Product not found.");
+
+            if ((product.StockQuantity ?? 0) < dto.Quantity)
+                throw new InvalidOperationException("Insufficient stock.");
+
+            var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId)
+                ?? await _cartRepository.CreateCartAsync(userId);
+
+            var existingItem = await _cartRepository.GetCartItemAsync(cart.CartId, dto.ProductId);
+
+            if (existingItem is not null)
             {
-                CartId = cart.CartId,
-                ProductId = dto.ProductId,
-                Quantity = dto.Quantity,
-                Price = product.Price
-            });
-        }
+                existingItem.Quantity += dto.Quantity;
+                await _cartRepository.UpdateCartItemAsync(existingItem);
+            }
+            else
+            {
+                await _cartRepository.AddCartItemAsync(new CartItem
+                {
+                    CartId = cart.CartId,
+                    ProductId = dto.ProductId,
+                    Quantity = dto.Quantity,
+                    Price = product.Price
+                });
+            }
 
-        await _cartRepository.RecalculateTotalAsync(cart.CartId);
-        return MapToDto((await _cartRepository.GetActiveCartByUserIdAsync(userId))!);
+            await _cartRepository.RecalculateTotalAsync(cart.CartId);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return MapToDto((await _cartRepository.GetActiveCartByUserIdAsync(userId))!);
+        });
     }
 
     public async Task<CartDto> UpdateItemQuantityAsync(int userId, int cartItemId, UpdateCartItemDto dto)
