@@ -22,6 +22,9 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByUsernameAsync(string username)
         => await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 
+    public async Task<List<User>> GetAllByRoleAsync(string role)
+        => await _context.Users.Where(u => u.Role == role).ToListAsync();
+
     public async Task<User> CreateAsync(User user)
     {
         _context.Users.Add(user);

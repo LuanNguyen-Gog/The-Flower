@@ -14,11 +14,11 @@ public class CartRepository : ICartRepository
         => await _context.Carts
             .Include(c => c.CartItems)
             .ThenInclude(ci => ci.Product)
-            .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == "Active");
+            .FirstOrDefaultAsync(c => c.UserId == userId);
 
     public async Task<Cart> CreateCartAsync(int userId)
     {
-        var cart = new Cart { UserId = userId, TotalPrice = 0, Status = "Active" };
+        var cart = new Cart { UserId = userId, TotalPrice = 0};
         _context.Carts.Add(cart);
         await _context.SaveChangesAsync();
         return cart;
@@ -67,7 +67,6 @@ public class CartRepository : ICartRepository
     {
         var cart = await _context.Carts.FindAsync(cartId);
         if (cart is null) return;
-        cart.Status = status;
         await _context.SaveChangesAsync();
     }
 }
