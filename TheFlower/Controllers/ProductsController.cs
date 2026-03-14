@@ -109,4 +109,134 @@ public class ProductsController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Tạo sản phẩm mới
+    /// POST /api/products
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Invalid product data",
+                    Data = null
+                });
+
+            var result = await _productService.CreateProductAsync(dto);
+            return CreatedAtAction(nameof(GetProduct), new { id = result.ProductId }, new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Product created successfully",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
+
+    /// <summary>
+    /// Cập nhật thông tin sản phẩm
+    /// PUT /api/products/{id}
+    /// </summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Invalid product data",
+                    Data = null
+                });
+
+            if (id != dto.ProductId)
+                return BadRequest(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Product ID mismatch",
+                    Data = null
+                });
+
+            var result = await _productService.UpdateProductAsync(dto);
+            if (!result)
+                return NotFound(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Product not found",
+                    Data = null
+                });
+
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Product updated successfully",
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
+
+    /// <summary>
+    /// Xóa sản phẩm (soft delete - đặt status thành InActive)
+    /// DELETE /api/products/{id}
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        try
+        {
+            var result = await _productService.DeleteProductAsync(id);
+            if (!result)
+                return NotFound(new ResponseDto
+                {
+                    isSuccess = false,
+                    Message = "Product not found",
+                    Data = null
+                });
+
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Product deleted successfully",
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
 }

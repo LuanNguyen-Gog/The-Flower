@@ -26,6 +26,7 @@ public class OrderRepository : IOrderRepository
 
     public async Task<Order?> GetByIdWithDetailsAsync(int orderId)
         => await _context.Orders
+            .Include(o => o.User)
             .Include(o => o.Cart)
             .ThenInclude(c => c!.CartItems)
             .ThenInclude(ci => ci.Product)

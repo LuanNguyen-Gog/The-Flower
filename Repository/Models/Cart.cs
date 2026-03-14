@@ -13,6 +13,8 @@ public partial class Cart
 
     public decimal TotalPrice { get; set; }
 
+    public string Status { get; set; } = "Active";
+
     public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();

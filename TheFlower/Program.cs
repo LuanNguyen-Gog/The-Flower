@@ -12,6 +12,20 @@ using TheFlower.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── Kestrel Configuration - Support both HTTP and HTTPS ────────────────────────
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(5000, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+    });
+    serverOptions.ListenAnyIP(5001, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+        listenOptions.UseHttps();
+    });
+});
+
 // ── Database ──────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<SalesAppDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -22,6 +36,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Individual repositories (optional, can use UnitOfWork instead)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
@@ -33,11 +48,16 @@ builder.Services.AddScoped<IOtpRepository, OtpRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IStoreLocationService, StoreLocationService>();
+
+// ── Chat Service ──────────────────────────────────────────────────────────────
+builder.Services.AddScoped<IChatService, ChatService>();
+// ── HttpClient for External APIs ──────────────────────────────────────────────
+builder.Services.AddHttpClient<IGeocodingService, GeocodingService>();
 
 // ── JWT Authentication ────────────────────────────────────────────────────────
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -137,11 +157,22 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-app.UseHttpsRedirection();
+
+// ── HTTPS Redirection - Only in Production ────────────────────────────────────
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hub/chat");
+app.MapHub<NotificationHub>("/hub/notifications");
+
+// ── Start background services ─────────────────────────────────────────────────
+var chatService = app.Services.GetRequiredService<IChatService>();
+await chatService.StartAsync();
 
 app.Run();

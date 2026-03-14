@@ -67,6 +67,8 @@ public class CartRepository : ICartRepository
     {
         var cart = await _context.Carts.FindAsync(cartId);
         if (cart is null) return;
+        cart.Status = status;
+        _context.Carts.Update(cart);
         await _context.SaveChangesAsync();
     }
 }

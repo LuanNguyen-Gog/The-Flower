@@ -1,3 +1,4 @@
+using Repository.Models;
 using Repository.Repositories.Interfaces;
 using Service.DTOs.Notifications;
 using Service.Services.Interfaces;
@@ -8,13 +9,16 @@ public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly ICartRepository _cartRepository;
+    private readonly INotificationBroadcaster? _broadcaster;
 
     public NotificationService(
         INotificationRepository notificationRepository,
-        ICartRepository cartRepository)
+        ICartRepository cartRepository,
+        INotificationBroadcaster? broadcaster = null)
     {
         _notificationRepository = notificationRepository;
         _cartRepository = cartRepository;
+        _broadcaster = broadcaster;
     }
 
     public async Task<IEnumerable<NotificationDto>> GetNotificationsAsync(int userId)
@@ -42,6 +46,42 @@ public class NotificationService : INotificationService
         };
     }
 
+    public async Task<NotificationDto> CreateNotificationAsync(int userId, string message)
+    {
+        var notification = new Notification
+        {
+            UserId = userId,
+            Message = message,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var createdNotification = await _notificationRepository.CreateAsync(notification);
+        var notificationDto = new NotificationDto
+        {
+            NotificationId = createdNotification.NotificationId,
+            Message = createdNotification.Message ?? string.Empty,
+            IsRead = createdNotification.IsRead,
+            CreatedAt = createdNotification.CreatedAt
+        };
+
+        // Gửi real-time qua SignalR (nếu broadcaster được inject)
+        if (_broadcaster is not null)
+        {
+            try
+            {
+                await _broadcaster.SendNotificationAsync(userId, notificationDto);
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw - still want to save notification to DB
+                Console.WriteLine($"Failed to broadcast notification: {ex.Message}");
+            }
+        }
+
+        return notificationDto;
+    }
+
     public async Task MarkAsReadAsync(int userId, int notificationId)
     {
         var notification = await _notificationRepository.GetByIdAsync(notificationId)
@@ -55,4 +95,47 @@ public class NotificationService : INotificationService
 
     public async Task MarkAllAsReadAsync(int userId)
         => await _notificationRepository.MarkAllAsReadAsync(userId);
+
+    public async Task DeleteNotificationAsync(int userId, int notificationId)
+    {
+        var notification = await _notificationRepository.GetByIdAsync(notificationId)
+            ?? throw new KeyNotFoundException("Notification not found.");
+
+        if (notification.UserId != userId)
+            throw new UnauthorizedAccessException("Access denied.");
+
+        await _notificationRepository.DeleteAsync(notificationId);
+    }
+
+    /// <summary>
+    /// Gửi thông báo - lưu vào DB + broadcast real-time qua SignalR
+    /// </summary>
+    public async Task<NotificationDto> SendNotificationAsync(int userId, string message)
+    {
+        // Tạo và lưu notification
+        var notificationDto = await CreateNotificationAsync(userId, message);
+
+        // Broadcast real-time (logic của INotificationBroadcaster)
+        if (_broadcaster is not null)
+        {
+            try
+            {
+                await _broadcaster.SendNotificationAsync(userId, notificationDto);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to broadcast notification: {ex.Message}");
+            }
+        }
+
+        return notificationDto;
+    }
+
+    private static NotificationDto MapToDto(Notification notification) => new()
+    {
+        NotificationId = notification.NotificationId,
+        Message = notification.Message ?? string.Empty,
+        IsRead = notification.IsRead,
+        CreatedAt = notification.CreatedAt
+    };
 }
