@@ -11,17 +11,7 @@ public enum RoleEnum
     Customer = 0,
 
     /// <summary>
-    /// Nhân viên bán hàng
-    /// </summary>
-    Staff = 1,
-
-    /// <summary>
-    /// Quản lý cửa hàng
-    /// </summary>
-    Manager = 2,
-
-    /// <summary>
     /// Quản trị viên
     /// </summary>
-    Admin = 3
+    Admin = 1
 }
