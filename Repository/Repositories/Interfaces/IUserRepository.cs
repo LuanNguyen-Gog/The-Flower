@@ -4,6 +4,7 @@ namespace Repository.Repositories.Interfaces;
 
 public interface IUserRepository
 {
+    Task<List<User>> GetAllAsync();
     Task<User?> GetByIdAsync(int userId);
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByUsernameAsync(string username);
