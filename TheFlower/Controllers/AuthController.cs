@@ -23,10 +23,10 @@ public class AuthController : ControllerBase
         int.Parse(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier)!);
 
     /// <summary>
-    /// Step 1: Đăng ký tài khoản mới và gửi OTP về email
+    /// Đăng ký tài khoản mới và kích hoạt ngay
     /// </summary>
     [HttpPost("register")]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
@@ -42,71 +42,16 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authService.RegisterAsync(dto);
-            return Ok(new ResponseDto
+            return StatusCode(StatusCodes.Status201Created, new ResponseDto
             {
                 isSuccess = true,
-                Message = result.Message,
-                Data = new { expiresInMinutes = result.ExpiresInMinutes }
+                Message = "Register successful",
+                Data = result
             });
         }
         catch (InvalidOperationException ex)
         {
             return Conflict(new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-    }
-
-    /// <summary>
-    /// Step 2: Xác minh OTP và hoàn thành đăng ký
-    /// </summary>
-    [HttpPost("verify-otp")]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRegisterDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(new ResponseDto
-            {
-                isSuccess = false,
-                Message = "Invalid input",
-                Data = ModelState
-            });
-
-        try
-        {
-            var response = await _authService.VerifyOtpAndRegisterAsync(dto.Email!, dto.OtpCode!, new RegisterDto
-            {
-                Email = dto.Email,
-                Username = dto.Username,
-                Password = dto.Password,
-                PhoneNumber = dto.PhoneNumber,
-                Address = dto.Address
-            });
-
-            return StatusCode(StatusCodes.Status201Created, new ResponseDto
-            {
-                isSuccess = true,
-                Message = "Email verified successfully. Registration completed.",
-                Data = response
-            });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Unauthorized(new ResponseDto
             {
                 isSuccess = false,
                 Message = ex.Message,
@@ -230,154 +175,6 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Bước 1: Yêu cầu reset mật khẩu (gửi OTP về email)
-    /// POST /api/auth/forgot-password
-    /// </summary>
-    [HttpPost("forgot-password")]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(new ResponseDto
-            {
-                isSuccess = false,
-                Message = "Invalid input",
-                Data = ModelState
-            });
-
-        try
-        {
-            var result = await _authService.ForgotPasswordAsync(dto.Email);
-            return Ok(new ResponseDto
-            {
-                isSuccess = true,
-                Message = result.Message,
-                Data = new { expiresInMinutes = result.ExpiresInMinutes }
-            });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return NotFound(new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-    }
-
-    /// <summary>
-    /// Bước 2: Xác minh OTP để reset mật khẩu
-    /// POST /api/auth/verify-forgot-password-otp
-    /// </summary>
-    [HttpPost("verify-forgot-password-otp")]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> VerifyForgotPasswordOtp([FromBody] VerifyForgotPasswordOtpDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(new ResponseDto
-            {
-                isSuccess = false,
-                Message = "Invalid input",
-                Data = ModelState
-            });
-
-        try
-        {
-            var result = await _authService.VerifyForgotPasswordOtpAsync(dto.Email, dto.OtpCode);
-            return Ok(new ResponseDto
-            {
-                isSuccess = true,
-                Message = result.Message,
-                Data = new { expiresInMinutes = result.ExpiresInMinutes }
-            });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Unauthorized(new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-    }
-
-    /// <summary>
-    /// Bước 3: Nhập mật khẩu mới sau khi xác minh OTP
-    /// POST /api/auth/reset-password
-    /// </summary>
-    [HttpPost("reset-password")]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(new ResponseDto
-            {
-                isSuccess = false,
-                Message = "Invalid input",
-                Data = ModelState
-            });
-
-        try
-        {
-            var response = await _authService.ResetPasswordAsync(dto.Email, dto);
-            return Ok(new ResponseDto
-            {
-                isSuccess = true,
-                Message = "Password reset successfully",
-                Data = response
-            });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Unauthorized(new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
-            {
-                isSuccess = false,
-                Message = ex.Message,
-                Data = null
-            });
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // STAFF MANAGEMENT ENDPOINTS
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /// <summary>
     /// Tạo Staff mới
     /// POST /api/auth/staff
     /// </summary>
@@ -402,7 +199,7 @@ public class AuthController : ControllerBase
             return StatusCode(StatusCodes.Status201Created, new ResponseDto
             {
                 isSuccess = true,
-                Message = "Staff tạo thành công. Thông tin đăng nhập đã được gửi về email.",
+                Message = "Staff tạo thành công.",
                 Data = result
             });
         }

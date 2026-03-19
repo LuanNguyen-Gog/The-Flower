@@ -18,7 +18,7 @@ public class UnitOfWork : IUnitOfWork
     private INotificationRepository? _notificationRepository;
     private IChatRepository? _chatRepository;
     private IStoreLocationRepository? _storeLocationRepository;
-    private IOtpRepository? _otpRepository;
+
 
     public UnitOfWork(SalesAppDBContext context)
     {
@@ -59,11 +59,6 @@ public class UnitOfWork : IUnitOfWork
     public IStoreLocationRepository StoreLocations
     {
         get { return _storeLocationRepository ??= new StoreLocationRepository(_context); }
-    }
-
-    public IOtpRepository Otps
-    {
-        get { return _otpRepository ??= new OtpRepository(_context); }
     }
 
     /// <summary>
@@ -126,6 +121,6 @@ public class UnitOfWork : IUnitOfWork
     public void Dispose()
     {
         _transaction?.Dispose();
-        _context?.Dispose();
+        _context.Dispose();
     }
 }

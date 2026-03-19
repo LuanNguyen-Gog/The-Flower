@@ -21,7 +21,6 @@ namespace Service.Services.Implementations;
 /// </summary>
 public class ChatService : IChatService
 {
-    private readonly IChatRepository _chatRepository;
     private readonly IServiceProvider _serviceProvider;
 
     // ── In-Memory Cache ──────────────────────────────────────────────────────
@@ -35,11 +34,8 @@ public class ChatService : IChatService
     // ── Background Persistence ──────────────────────────────────────────────
     private CancellationTokenSource? _cancellationTokenSource;
 
-    public ChatService(
-        IChatRepository chatRepository,
-        IServiceProvider serviceProvider)
+    public ChatService(IServiceProvider serviceProvider)
     {
-        _chatRepository = chatRepository;
         _serviceProvider = serviceProvider;
     }
 
@@ -351,3 +347,4 @@ public class ChatService : IChatService
         SentAt = m.SentAt
     };
 }
+

@@ -8,7 +8,6 @@ using PayOS.Resources.Webhooks;
 using Repository.Models;
 using Repository.Repositories.Interfaces;
 using Service.DTOs.Orders;
-using Service.EmailTemplates;
 using Service.Services.Interfaces;
 
 namespace Service.Services.Implementations;
@@ -19,7 +18,6 @@ public class OrderService : IOrderService
     private readonly ICartRepository _cartRepository;
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IEmailService _emailService;
     private readonly INotificationService _notificationService;
     private readonly PayOSClient _payOsClient;
 
@@ -28,7 +26,6 @@ public class OrderService : IOrderService
         ICartRepository cartRepository,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
-        IEmailService emailService,
         INotificationService notificationService,
         IConfiguration configuration)
     {
@@ -36,7 +33,6 @@ public class OrderService : IOrderService
         _cartRepository = cartRepository;
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
-        _emailService = emailService;
         _notificationService = notificationService;
 
         var cfg = configuration.GetSection("PayOS");
@@ -133,25 +129,6 @@ public class OrderService : IOrderService
                         await _orderRepository.UpdatePaymentAsync(payment);
                     }
 
-                    // Send COD email and create notification
-                    var user = await _userRepository.GetByIdAsync(userId);
-                    if (user is not null && !string.IsNullOrEmpty(user.Email))
-                    {
-                        var template = new OrderCodConfirmationTemplate(order);
-                        try
-                        {
-                            await _emailService.SendEmailAsync(
-                                user.Email,
-                                template.GetSubject(),
-                                template.GetHtmlBody(),
-                                isHtml: true);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Failed to send COD email: {ex.Message}");
-                        }
-                    }
-
                     try
                     {
                         await _notificationService.SendNotificationAsync(
@@ -244,25 +221,6 @@ public class OrderService : IOrderService
                         {
                             cartItem.Product.StockQuantity = (cartItem.Product.StockQuantity ?? 0) - cartItem.Quantity;
                         }
-                    }
-                }
-
-                // Send success email to user
-                if (order.User is not null && !string.IsNullOrEmpty(order.User.Email))
-                {
-                    var template = new OrderPaymentSuccessTemplate(order);
-                    try
-                    {
-                        await _emailService.SendEmailAsync(
-                            order.User.Email,
-                            template.GetSubject(),
-                            template.GetHtmlBody(),
-                            isHtml: true);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log email error but don't throw - don't want to fail order if email fails
-                        Console.WriteLine($"Failed to send email: {ex.Message}");
                     }
                 }
 

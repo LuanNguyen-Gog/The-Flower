@@ -26,9 +26,14 @@ public class CreateStaffResponseDto
     public string PhoneNumber { get; set; }
 
     /// <summary>
-    /// Mựcmật khẩu tạm thời đã được gửi về email
+    /// Đã gửi mật khẩu qua email hay chưa
     /// </summary>
     public bool PasswordSent { get; set; }
+
+    /// <summary>
+    /// Mật khẩu tạm thời để bàn giao thủ công
+    /// </summary>
+    public string TemporaryPassword { get; set; }
 
     /// <summary>
     /// Thông báo

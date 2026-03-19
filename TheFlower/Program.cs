@@ -13,18 +13,22 @@ using TheFlower.Hubs;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Kestrel Configuration - Support both HTTP and HTTPS ────────────────────────
-builder.WebHost.ConfigureKestrel(serverOptions =>
+if (!builder.Environment.IsDevelopment())
 {
-    serverOptions.ListenAnyIP(5000, listenOptions =>
+    builder.WebHost.ConfigureKestrel(serverOptions =>
     {
-        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+        serverOptions.ListenAnyIP(5000, listenOptions =>
+        {
+            listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+        });
+
+        serverOptions.ListenAnyIP(5001, listenOptions =>
+        {
+            listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+            listenOptions.UseHttps();
+        });
     });
-    serverOptions.ListenAnyIP(5001, listenOptions =>
-    {
-        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
-        listenOptions.UseHttps();
-    });
-});
+}
 
 // ── Database ──────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<SalesAppDBContext>(options =>
@@ -42,11 +46,10 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IStoreLocationRepository, StoreLocationRepository>();
-builder.Services.AddScoped<IOtpRepository, OtpRepository>();
+
 
 // ── Service DI ────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICartService, CartService>();
@@ -55,7 +58,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoreLocationService, StoreLocationService>();
 
 // ── Chat Service ──────────────────────────────────────────────────────────────
-builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddSingleton<IChatService, ChatService>();
 // ── HttpClient for External APIs ──────────────────────────────────────────────
 builder.Services.AddHttpClient<IGeocodingService, GeocodingService>();
 
@@ -148,6 +151,51 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// ── Database migration + admin seed from appsettings ──────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<SalesAppDBContext>();
+    await dbContext.Database.MigrateAsync();
+
+    var adminSection = app.Configuration.GetSection("AdminAccount");
+    var adminUsername = adminSection["Username"];
+    var adminEmail = adminSection["Email"];
+    var adminPasswordHash = adminSection["PasswordHash"];
+
+    if (!string.IsNullOrWhiteSpace(adminUsername)
+        && !string.IsNullOrWhiteSpace(adminEmail)
+        && !string.IsNullOrWhiteSpace(adminPasswordHash))
+    {
+        var adminUser = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.Username == adminUsername || u.Email == adminEmail);
+
+        if (adminUser is null)
+        {
+            dbContext.Users.Add(new User
+            {
+                Username = adminUsername,
+                Email = adminEmail,
+                PasswordHash = adminPasswordHash,
+                Role = adminSection["Role"] ?? "Admin",
+                PhoneNumber = adminSection["PhoneNumber"],
+                Address = adminSection["Address"],
+                Status = adminSection["Status"] ?? "Active",
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            adminUser.PasswordHash = adminPasswordHash;
+            adminUser.Role = adminSection["Role"] ?? "Admin";
+            adminUser.PhoneNumber = adminSection["PhoneNumber"];
+            adminUser.Address = adminSection["Address"];
+            adminUser.Status = adminSection["Status"] ?? "Active";
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+}
 
 // ── Middleware pipeline ───────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
