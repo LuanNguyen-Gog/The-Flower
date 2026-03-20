@@ -13,7 +13,7 @@ public class StoreLocationRepository : IStoreLocationRepository
     public async Task<IEnumerable<StoreLocation>> GetAllAsync()
         => await _context.StoreLocations.OrderBy(s => s.LocationId).ToListAsync();
 
-    public async Task<StoreLocation?> GetByIdAsync(int id)
+    public async Task<StoreLocation?> GetByIdAsync(Guid id)
         => await _context.StoreLocations.FindAsync(id);
 
     public async Task<StoreLocation> CreateAsync(StoreLocation location)
@@ -29,7 +29,7 @@ public class StoreLocationRepository : IStoreLocationRepository
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
         var location = await _context.StoreLocations.FindAsync(id);
         if (location == null)

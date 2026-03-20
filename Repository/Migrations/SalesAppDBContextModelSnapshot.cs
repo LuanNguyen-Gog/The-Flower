@@ -24,12 +24,11 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.Cart", b =>
                 {
-                    b.Property<int>("CartId")
+                    b.Property<Guid>("CartId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("CartID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CartId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CartID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
@@ -37,8 +36,8 @@ namespace Repository.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("UserID");
 
                     b.HasKey("CartId")
@@ -51,22 +50,21 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.CartItem", b =>
                 {
-                    b.Property<int>("CartItemId")
+                    b.Property<Guid>("CartItemId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("CartItemID");
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CartItemID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CartItemId"));
-
-                    b.Property<int?>("CartId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("CartId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("CartID");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<int?>("ProductId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("ProductID");
 
                     b.Property<int>("Quantity")
@@ -84,12 +82,11 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.Category", b =>
                 {
-                    b.Property<int>("CategoryId")
+                    b.Property<Guid>("CategoryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("CategoryID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CategoryID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<string>("CategoryName")
                         .IsRequired()
@@ -107,12 +104,11 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.ChatMessage", b =>
                 {
-                    b.Property<int>("ChatMessageId")
+                    b.Property<Guid>("ChatMessageId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("ChatMessageID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ChatMessageId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ChatMessageID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<string>("Message")
                         .HasColumnType("nvarchar(max)");
@@ -125,8 +121,8 @@ namespace Repository.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("UserID");
 
                     b.HasKey("ChatMessageId")
@@ -139,12 +135,11 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.Notification", b =>
                 {
-                    b.Property<int>("NotificationId")
+                    b.Property<Guid>("NotificationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("NotificationID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("NotificationID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -158,8 +153,8 @@ namespace Repository.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("UserID");
 
                     b.HasKey("NotificationId")
@@ -172,20 +167,19 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.Order", b =>
                 {
-                    b.Property<int>("OrderId")
+                    b.Property<Guid>("OrderId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("OrderID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("OrderID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<string>("BillingAddress")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("CartId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("CartId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("CartID");
 
                     b.Property<DateTime>("OrderDate")
@@ -206,8 +200,8 @@ namespace Repository.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("UserID");
 
                     b.HasKey("OrderId")
@@ -222,18 +216,17 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.Payment", b =>
                 {
-                    b.Property<int>("PaymentId")
+                    b.Property<Guid>("PaymentId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("PaymentID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("PaymentID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18, 2)");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("OrderID");
 
                     b.Property<DateTime>("PaymentDate")
@@ -259,19 +252,18 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.Product", b =>
                 {
-                    b.Property<int>("ProductId")
+                    b.Property<Guid>("ProductId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("ProductID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ProductID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<string>("BriefDescription")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("CategoryID");
 
                     b.Property<string>("FullDescription")
@@ -311,12 +303,11 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.StoreLocation", b =>
                 {
-                    b.Property<int>("LocationId")
+                    b.Property<Guid>("LocationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("LocationID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LocationId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LocationID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -340,12 +331,11 @@ namespace Repository.Migrations
 
             modelBuilder.Entity("Repository.Models.User", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("UserID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UserID")
+                        .HasDefaultValueSql("(newsequentialid())");
 
                     b.Property<string>("Address")
                         .HasMaxLength(255)
@@ -399,7 +389,7 @@ namespace Repository.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = 1,
+                            UserId = new Guid("a1111111-1111-1111-1111-111111111111"),
                             Address = "123 Admin St.",
                             CreatedAt = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "admin@gmail.com",

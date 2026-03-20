@@ -4,7 +4,7 @@ namespace Service.DTOs.Orders;
 
 public class OrderItemDto
 {
-    public int ProductId { get; set; }
+    public Guid ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
     public decimal UnitPrice { get; set; }
@@ -14,7 +14,7 @@ public class OrderItemDto
 
 public class OrderDto
 {
-    public int OrderId { get; set; }
+    public Guid OrderId { get; set; }
     public string PaymentMethod { get; set; } = string.Empty;
     public string BillingAddress { get; set; } = string.Empty;
     public string OrderStatus { get; set; } = string.Empty;
@@ -26,7 +26,7 @@ public class OrderDto
 
 public class CreateOrderResponseDto
 {
-    public int OrderId { get; set; }
+    public Guid OrderId { get; set; }
     public string OrderStatus { get; set; } = string.Empty;
     public string PaymentMethod { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }

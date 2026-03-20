@@ -15,7 +15,7 @@ public class NotificationBroadcaster : INotificationBroadcaster
     public NotificationBroadcaster(IHubContext<NotificationHub> hubContext)
         => _hubContext = hubContext;
 
-    public async Task SendNotificationAsync(int userId, NotificationDto notification)
+    public async Task SendNotificationAsync(Guid userId, NotificationDto notification)
     {
         await _hubContext.Clients
             .Group($"user-{userId}")

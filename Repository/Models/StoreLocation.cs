@@ -7,7 +7,7 @@ namespace Repository.Models;
 
 public partial class StoreLocation
 {
-    public int LocationId { get; set; }
+    public Guid LocationId { get; set; } = Guid.NewGuid();
 
     public decimal? Latitude { get; set; }
 

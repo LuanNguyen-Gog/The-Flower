@@ -4,10 +4,10 @@ namespace Service.Services.Interfaces;
 
 public interface ICartService
 {
-    Task<CartDto> GetCartAsync(int userId);
-    Task<CartDto> AddItemAsync(int userId, AddToCartDto dto);
-    Task<CartDto> UpdateItemQuantityAsync(int userId, int cartItemId, UpdateCartItemDto dto);
-    Task<CartDto> RemoveItemAsync(int userId, int cartItemId);
-    Task ClearCartAsync(int userId);
-    Task<int> GetCartItemCountAsync(int userId);
+    Task<CartDto> GetCartAsync(Guid userId);
+    Task<CartDto> AddItemAsync(Guid userId, AddToCartDto dto);
+    Task<CartDto> UpdateItemQuantityAsync(Guid userId, Guid cartItemId, UpdateCartItemDto dto);
+    Task<CartDto> RemoveItemAsync(Guid userId, Guid cartItemId);
+    Task ClearCartAsync(Guid userId);
+    Task<int> GetCartItemCountAsync(Guid userId);
 }

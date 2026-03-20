@@ -10,7 +10,7 @@ public class ChatRepository : IChatRepository
 
     public ChatRepository(SalesAppDBContext context) => _context = context;
 
-    public async Task<IEnumerable<ChatMessage>> GetMessagesByUserIdAsync(int userId, int page, int pageSize)
+    public async Task<IEnumerable<ChatMessage>> GetMessagesByUserIdAsync(Guid userId, int page, int pageSize)
         => await _context.ChatMessages
             .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.SentAt)

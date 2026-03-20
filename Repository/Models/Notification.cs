@@ -7,9 +7,9 @@ namespace Repository.Models;
 
 public partial class Notification
 {
-    public int NotificationId { get; set; }
+    public Guid NotificationId { get; set; } = Guid.NewGuid();
 
-    public int? UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     public string Message { get; set; }
 

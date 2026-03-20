@@ -21,7 +21,7 @@ public class NotificationService : INotificationService
         _broadcaster = broadcaster;
     }
 
-    public async Task<IEnumerable<NotificationDto>> GetNotificationsAsync(int userId)
+    public async Task<IEnumerable<NotificationDto>> GetNotificationsAsync(Guid userId)
     {
         var notifications = await _notificationRepository.GetByUserIdAsync(userId);
         return notifications.Select(n => new NotificationDto
@@ -33,7 +33,7 @@ public class NotificationService : INotificationService
         });
     }
 
-    public async Task<BadgeDto> GetBadgeAsync(int userId)
+    public async Task<BadgeDto> GetBadgeAsync(Guid userId)
     {
         var unreadCount = await _notificationRepository.GetUnreadCountAsync(userId);
         var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId);
@@ -46,7 +46,7 @@ public class NotificationService : INotificationService
         };
     }
 
-    public async Task<NotificationDto> CreateNotificationAsync(int userId, string message)
+    public async Task<NotificationDto> CreateNotificationAsync(Guid userId, string message)
     {
         var notification = new Notification
         {
@@ -82,7 +82,7 @@ public class NotificationService : INotificationService
         return notificationDto;
     }
 
-    public async Task MarkAsReadAsync(int userId, int notificationId)
+    public async Task MarkAsReadAsync(Guid userId, Guid notificationId)
     {
         var notification = await _notificationRepository.GetByIdAsync(notificationId)
             ?? throw new KeyNotFoundException("Notification not found.");
@@ -93,10 +93,10 @@ public class NotificationService : INotificationService
         await _notificationRepository.MarkAsReadAsync(notificationId);
     }
 
-    public async Task MarkAllAsReadAsync(int userId)
+    public async Task MarkAllAsReadAsync(Guid userId)
         => await _notificationRepository.MarkAllAsReadAsync(userId);
 
-    public async Task DeleteNotificationAsync(int userId, int notificationId)
+    public async Task DeleteNotificationAsync(Guid userId, Guid notificationId)
     {
         var notification = await _notificationRepository.GetByIdAsync(notificationId)
             ?? throw new KeyNotFoundException("Notification not found.");
@@ -110,7 +110,7 @@ public class NotificationService : INotificationService
     /// <summary>
     /// Gửi thông báo - lưu vào DB + broadcast real-time qua SignalR
     /// </summary>
-    public async Task<NotificationDto> SendNotificationAsync(int userId, string message)
+    public async Task<NotificationDto> SendNotificationAsync(Guid userId, string message)
     {
         // Tạo và lưu notification
         var notificationDto = await CreateNotificationAsync(userId, message);

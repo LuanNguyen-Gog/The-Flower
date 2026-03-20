@@ -46,6 +46,6 @@ public class ChatHub : Hub
             .SendAsync("ReceiveMessage", saved);
     }
 
-    private int GetUserId() =>
-        int.Parse(Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId() =>
+        Guid.Parse(Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

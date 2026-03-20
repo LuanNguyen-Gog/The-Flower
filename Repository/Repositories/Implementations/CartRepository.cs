@@ -10,13 +10,13 @@ public class CartRepository : ICartRepository
 
     public CartRepository(SalesAppDBContext context) => _context = context;
 
-    public async Task<Cart?> GetActiveCartByUserIdAsync(int userId)
+    public async Task<Cart?> GetActiveCartByUserIdAsync(Guid userId)
         => await _context.Carts
             .Include(c => c.CartItems)
             .ThenInclude(ci => ci.Product)
             .FirstOrDefaultAsync(c => c.UserId == userId);
 
-    public async Task<Cart> CreateCartAsync(int userId)
+    public async Task<Cart> CreateCartAsync(Guid userId)
     {
         var cart = new Cart { UserId = userId, TotalPrice = 0};
         _context.Carts.Add(cart);
@@ -24,11 +24,11 @@ public class CartRepository : ICartRepository
         return cart;
     }
 
-    public async Task<CartItem?> GetCartItemAsync(int cartId, int productId)
+    public async Task<CartItem?> GetCartItemAsync(Guid cartId, Guid productId)
         => await _context.CartItems
             .FirstOrDefaultAsync(ci => ci.CartId == cartId && ci.ProductId == productId);
 
-    public async Task<CartItem?> GetCartItemByIdAsync(int cartItemId)
+    public async Task<CartItem?> GetCartItemByIdAsync(Guid cartItemId)
         => await _context.CartItems
             .Include(ci => ci.Product)
             .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
@@ -51,7 +51,7 @@ public class CartRepository : ICartRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task RecalculateTotalAsync(int cartId)
+    public async Task RecalculateTotalAsync(Guid cartId)
     {
         var cart = await _context.Carts
             .Include(c => c.CartItems)
@@ -63,7 +63,7 @@ public class CartRepository : ICartRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task UpdateCartStatusAsync(int cartId, string status)
+    public async Task UpdateCartStatusAsync(Guid cartId, string status)
     {
         var cart = await _context.Carts.FindAsync(cartId);
         if (cart is null) return;

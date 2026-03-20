@@ -2,8 +2,8 @@ namespace Service.DTOs.Cart;
 
 public class CartItemDto
 {
-    public int CartItemId { get; set; }
-    public int ProductId { get; set; }
+    public Guid CartItemId { get; set; }
+    public Guid ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
     public decimal UnitPrice { get; set; }
@@ -13,7 +13,7 @@ public class CartItemDto
 
 public class CartDto
 {
-    public int CartId { get; set; }
+    public Guid CartId { get; set; }
     public List<CartItemDto> Items { get; set; } = [];
     public decimal TotalPrice { get; set; }
     public int TotalItems { get; set; }

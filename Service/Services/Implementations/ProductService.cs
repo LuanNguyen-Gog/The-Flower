@@ -32,7 +32,7 @@ public class ProductService : IProductService
                 BriefDescription = p.BriefDescription,
                 Price = p.Price,
                 ImageUrl = p.ImageUrl,
-                CategoryId = p.CategoryId ?? 0,
+                CategoryId = p.CategoryId,
                 CategoryName = p.Category?.CategoryName ?? string.Empty,
                 StockQuantity = p.StockQuantity ?? 0
             }),
@@ -42,7 +42,7 @@ public class ProductService : IProductService
         };
     }
 
-    public async Task<ProductDetailDto?> GetProductByIdAsync(int id)
+    public async Task<ProductDetailDto?> GetProductByIdAsync(Guid id)
     {
         var p = await _productRepository.GetByIdAsync(id);
         if (p is null) return null;
@@ -56,7 +56,7 @@ public class ProductService : IProductService
             TechnicalSpecifications = p.TechnicalSpecifications,
             Price = p.Price,
             ImageUrl = p.ImageUrl,
-            CategoryId = p.CategoryId ?? 0,
+            CategoryId = p.CategoryId,
             CategoryName = p.Category?.CategoryName ?? string.Empty,
             StockQuantity = p.StockQuantity ?? 0
         };
@@ -98,7 +98,7 @@ public class ProductService : IProductService
             TechnicalSpecifications = createdProduct.TechnicalSpecifications,
             Price = createdProduct.Price,
             ImageUrl = createdProduct.ImageUrl,
-            CategoryId = createdProduct.CategoryId ?? 0,
+            CategoryId = createdProduct.CategoryId,
             CategoryName = string.Empty,
             StockQuantity = createdProduct.StockQuantity ?? 0
         };
@@ -122,7 +122,7 @@ public class ProductService : IProductService
         return await _productRepository.UpdateAsync(existingProduct);
     }
 
-    public async Task<bool> DeleteProductAsync(int id)
+    public async Task<bool> DeleteProductAsync(Guid id)
     {
         return await _productRepository.DeleteAsync(id);
     }

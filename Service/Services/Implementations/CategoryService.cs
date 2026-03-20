@@ -18,7 +18,7 @@ public class CategoryService : ICategoryService
         return categories.Select(MapToDto);
     }
 
-    public async Task<GetCategoryDto?> GetCategoryByIdAsync(int id)
+    public async Task<GetCategoryDto?> GetCategoryByIdAsync(Guid id)
     {
         var category = await _categoryRepository.GetByIdAsync(id);
         return category is null ? null : MapToDto(category);
@@ -39,7 +39,7 @@ public class CategoryService : ICategoryService
         return MapToDto(createdCategory);
     }
 
-    public async Task<bool> UpdateCategoryAsync(int id, UpdateCategoryDto dto)
+    public async Task<bool> UpdateCategoryAsync(Guid id, UpdateCategoryDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.CategoryName))
             throw new InvalidOperationException("Category name is required.");
@@ -53,7 +53,7 @@ public class CategoryService : ICategoryService
         return await _categoryRepository.UpdateAsync(category);
     }
 
-    public async Task<bool> DeleteCategoryAsync(int id)
+    public async Task<bool> DeleteCategoryAsync(Guid id)
     {
         var category = await _categoryRepository.GetByIdAsync(id)
             ?? throw new KeyNotFoundException("Category not found.");

@@ -18,14 +18,14 @@ public class CartService : ICartService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<CartDto> GetCartAsync(int userId)
+    public async Task<CartDto> GetCartAsync(Guid userId)
     {
         var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId)
             ?? await _cartRepository.CreateCartAsync(userId);
         return MapToDto(cart);
     }
 
-    public async Task<CartDto> AddItemAsync(int userId, AddToCartDto dto)
+    public async Task<CartDto> AddItemAsync(Guid userId, AddToCartDto dto)
     {
         return await _unitOfWork.ExecuteInTransactionAsync(async () =>
         {
@@ -63,7 +63,7 @@ public class CartService : ICartService
         });
     }
 
-    public async Task<CartDto> UpdateItemQuantityAsync(int userId, int cartItemId, UpdateCartItemDto dto)
+    public async Task<CartDto> UpdateItemQuantityAsync(Guid userId, Guid cartItemId, UpdateCartItemDto dto)
     {
         var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId)
             ?? throw new KeyNotFoundException("Active cart not found.");
@@ -81,7 +81,7 @@ public class CartService : ICartService
         return MapToDto((await _cartRepository.GetActiveCartByUserIdAsync(userId))!);
     }
 
-    public async Task<CartDto> RemoveItemAsync(int userId, int cartItemId)
+    public async Task<CartDto> RemoveItemAsync(Guid userId, Guid cartItemId)
     {
         var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId)
             ?? throw new KeyNotFoundException("Active cart not found.");
@@ -98,7 +98,7 @@ public class CartService : ICartService
         return MapToDto((await _cartRepository.GetActiveCartByUserIdAsync(userId))!);
     }
 
-    public async Task ClearCartAsync(int userId)
+    public async Task ClearCartAsync(Guid userId)
     {
         var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId);
         if (cart is null) return;
@@ -109,7 +109,7 @@ public class CartService : ICartService
         await _cartRepository.RecalculateTotalAsync(cart.CartId);
     }
 
-    public async Task<int> GetCartItemCountAsync(int userId)
+    public async Task<int> GetCartItemCountAsync(Guid userId)
     {
         var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId);
         return cart?.CartItems.Sum(ci => ci.Quantity) ?? 0;
@@ -123,7 +123,7 @@ public class CartService : ICartService
         Items = cart.CartItems.Select(ci => new CartItemDto
         {
             CartItemId = ci.CartItemId,
-            ProductId = ci.ProductId ?? 0,
+            ProductId = ci.ProductId ?? Guid.Empty,
             ProductName = ci.Product?.ProductName ?? string.Empty,
             ImageUrl = ci.Product?.ImageUrl,
             UnitPrice = ci.Price,

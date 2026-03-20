@@ -24,7 +24,7 @@ public class OrderRepository : IOrderRepository
         return payment;
     }
 
-    public async Task<Order?> GetByIdWithDetailsAsync(int orderId)
+    public async Task<Order?> GetByIdWithDetailsAsync(Guid orderId)
         => await _context.Orders
             .Include(o => o.User)
             .Include(o => o.Cart)
@@ -33,7 +33,7 @@ public class OrderRepository : IOrderRepository
             .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
-    public async Task<IEnumerable<Order>> GetByUserIdAsync(int userId)
+    public async Task<IEnumerable<Order>> GetByUserIdAsync(Guid userId)
         => await _context.Orders
             .Include(o => o.Cart)
             .ThenInclude(c => c!.CartItems)
@@ -43,7 +43,7 @@ public class OrderRepository : IOrderRepository
             .OrderByDescending(o => o.OrderDate)
             .ToListAsync();
 
-    public async Task<Payment?> GetPaymentByOrderIdAsync(int orderId)
+    public async Task<Payment?> GetPaymentByOrderIdAsync(Guid orderId)
         => await _context.Payments
             .FirstOrDefaultAsync(p => p.OrderId == orderId);
 

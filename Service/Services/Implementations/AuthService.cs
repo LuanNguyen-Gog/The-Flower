@@ -96,7 +96,7 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public async Task<AuthResponseDto> ChangePasswordAsync(int userId, ChangePasswordDto dto)
+    public async Task<AuthResponseDto> ChangePasswordAsync(Guid userId, ChangePasswordDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)

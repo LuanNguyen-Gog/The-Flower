@@ -28,7 +28,7 @@ public class StoreLocationService : IStoreLocationService
         });
     }
 
-    public async Task<StoreLocationDto?> GetByIdAsync(int id)
+    public async Task<StoreLocationDto?> GetByIdAsync(Guid id)
     {
         var l = await _locationRepository.GetByIdAsync(id);
         if (l is null) return null;
@@ -80,7 +80,7 @@ public class StoreLocationService : IStoreLocationService
         return await _locationRepository.UpdateAsync(existingLocation);
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
         return await _locationRepository.DeleteAsync(id);
     }

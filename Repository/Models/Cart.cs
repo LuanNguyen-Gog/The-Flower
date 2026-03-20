@@ -7,9 +7,9 @@ namespace Repository.Models;
 
 public partial class Cart
 {
-    public int CartId { get; set; }
+    public Guid CartId { get; set; } = Guid.NewGuid();
 
-    public int? UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     public decimal TotalPrice { get; set; }
 

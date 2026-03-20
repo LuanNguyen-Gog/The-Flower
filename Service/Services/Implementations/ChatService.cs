@@ -27,7 +27,7 @@ public class ChatService : IChatService
     private const int MaxMessagesPerUser = 100;
     private const int BatchIntervalMs = 5000; // 5 seconds
 
-    private readonly Dictionary<int, LinkedList<ChatMessage>> _userMessageCache = new();
+    private readonly Dictionary<Guid, LinkedList<ChatMessage>> _userMessageCache = new();
     private readonly List<ChatMessage> _pendingMessages = new();
     private readonly object _lockObject = new();
 
@@ -48,7 +48,7 @@ public class ChatService : IChatService
     /// Page 1: Try cache first (most recent 100 messages)
     /// Page 2+: Query database for older messages
     /// </summary>
-    public async Task<IEnumerable<ChatMessageDto>> GetMessagesAsync(int userId, int page, int pageSize)
+    public async Task<IEnumerable<ChatMessageDto>> GetMessagesAsync(Guid userId, int page, int pageSize)
     {
         // Create a scope to get a fresh DbContext
         using var scope = _serviceProvider.CreateScope();
@@ -92,7 +92,7 @@ public class ChatService : IChatService
     /// Response time: ~50-100ms (includes DB save) for consistency,
     /// but client gets instant cache retrieval on next GetMessages call
     /// </summary>
-    public async Task<ChatMessageDto> SendMessageAsync(int userId, SendMessageDto dto)
+    public async Task<ChatMessageDto> SendMessageAsync(Guid userId, SendMessageDto dto)
     {
         // Create a scope to get a fresh DbContext
         using var scope = _serviceProvider.CreateScope();
@@ -163,7 +163,7 @@ public class ChatService : IChatService
     /// Add message to cache (threadsafe)
     /// Automatically tracks in pending list and manages capacity
     /// </summary>
-    private void AddMessage(int userId, ChatMessage message)
+    private void AddMessage(Guid userId, ChatMessage message)
     {
         lock (_lockObject)
         {
@@ -199,7 +199,7 @@ public class ChatService : IChatService
     /// <summary>
     /// Get all cached messages for a user (threadsafe)
     /// </summary>
-    private IEnumerable<ChatMessage> GetCachedMessages(int userId)
+    private IEnumerable<ChatMessage> GetCachedMessages(Guid userId)
     {
         lock (_lockObject)
         {
@@ -226,7 +226,7 @@ public class ChatService : IChatService
     /// Mark messages as persisted and remove from pending list (threadsafe)
     /// Called after batch save to database
     /// </summary>
-    private void MarkAsPersisted(IEnumerable<int> messageIds)
+    private void MarkAsPersisted(IEnumerable<Guid> messageIds)
     {
         lock (_lockObject)
         {
@@ -241,7 +241,7 @@ public class ChatService : IChatService
     /// Remove a single message from pending list (threadsafe)
     /// Used when a message is saved immediately, not via batch persistence
     /// </summary>
-    private void RemoveFromPending(int messageId)
+    private void RemoveFromPending(Guid messageId)
     {
         lock (_lockObject)
         {
@@ -342,7 +342,7 @@ public class ChatService : IChatService
     private static ChatMessageDto MapToDto(ChatMessage m) => new()
     {
         ChatMessageId = m.ChatMessageId,
-        UserId = m.UserId ?? 0,
+        UserId = m.UserId ?? Guid.Empty,
         Message = m.Message ?? string.Empty,
         SentAt = m.SentAt
     };

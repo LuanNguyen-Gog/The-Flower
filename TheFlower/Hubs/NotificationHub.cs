@@ -30,6 +30,6 @@ public class NotificationHub : Hub
     /// Android: hubConnection.On<NotificationDto>("ReceiveNotification", notification => { ... })
     /// </summary>
     /// 
-    private int GetUserId() =>
-        int.Parse(Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId() =>
+        Guid.Parse(Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

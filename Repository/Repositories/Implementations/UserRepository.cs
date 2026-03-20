@@ -16,7 +16,7 @@ public class UserRepository : IUserRepository
     public async Task<List<User>> GetAllAsync()
         => await _context.Users.ToListAsync();
 
-    public async Task<User?> GetByIdAsync(int userId)
+    public async Task<User?> GetByIdAsync(Guid userId)
         => await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 
     public async Task<User?> GetByEmailAsync(string email)

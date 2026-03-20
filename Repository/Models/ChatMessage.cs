@@ -7,9 +7,9 @@ namespace Repository.Models;
 
 public partial class ChatMessage
 {
-    public int ChatMessageId { get; set; }
+    public Guid ChatMessageId { get; set; } = Guid.NewGuid();
 
-    public int? UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     public string Message { get; set; }
 

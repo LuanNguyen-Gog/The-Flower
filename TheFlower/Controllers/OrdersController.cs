@@ -16,8 +16,8 @@ public class OrdersController : ControllerBase
 
     public OrdersController(IOrderService orderService) => _orderService = orderService;
 
-    private int GetUserId() =>
-        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId() =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     /// <summary>
     /// Tạo đơn hàng từ giỏ hàng hiện tại
@@ -102,9 +102,9 @@ public class OrdersController : ControllerBase
     /// Lấy đơn hàng của một user cụ thể (sắp xếp từ mới nhất)
     /// GET /api/orders/user/{userId}
     /// </summary>
-    [HttpGet("user/{userId:int}")]
+    [HttpGet("user/{userId:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetOrdersByUserId(int userId)
+    public async Task<IActionResult> GetOrdersByUserId(Guid userId)
     {
         try
         {
@@ -131,11 +131,11 @@ public class OrdersController : ControllerBase
     /// Xem chi tiết đơn hàng
     /// GET /api/orders/{id}
     /// </summary>
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [Authorize]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetOrder(int id)
+    public async Task<IActionResult> GetOrder(Guid id)
     {
         try
         {

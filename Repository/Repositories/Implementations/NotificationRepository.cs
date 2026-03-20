@@ -10,17 +10,17 @@ public class NotificationRepository : INotificationRepository
 
     public NotificationRepository(SalesAppDBContext context) => _context = context;
 
-    public async Task<IEnumerable<Notification>> GetByUserIdAsync(int userId)
+    public async Task<IEnumerable<Notification>> GetByUserIdAsync(Guid userId)
         => await _context.Notifications
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
 
-    public async Task<int> GetUnreadCountAsync(int userId)
+    public async Task<int> GetUnreadCountAsync(Guid userId)
         => await _context.Notifications
             .CountAsync(n => n.UserId == userId && !n.IsRead);
 
-    public async Task<Notification?> GetByIdAsync(int id)
+    public async Task<Notification?> GetByIdAsync(Guid id)
         => await _context.Notifications.FindAsync(id);
 
     public async Task<Notification> CreateAsync(Notification notification)
@@ -30,7 +30,7 @@ public class NotificationRepository : INotificationRepository
         return notification;
     }
 
-    public async Task MarkAsReadAsync(int notificationId)
+    public async Task MarkAsReadAsync(Guid notificationId)
     {
         var notification = await _context.Notifications.FindAsync(notificationId);
         if (notification is null) return;
@@ -38,14 +38,14 @@ public class NotificationRepository : INotificationRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task MarkAllAsReadAsync(int userId)
+    public async Task MarkAllAsReadAsync(Guid userId)
     {
         await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
     }
 
-    public async Task DeleteAsync(int notificationId)
+    public async Task DeleteAsync(Guid notificationId)
     {
         var notification = await _context.Notifications.FindAsync(notificationId);
         if (notification is null) return;

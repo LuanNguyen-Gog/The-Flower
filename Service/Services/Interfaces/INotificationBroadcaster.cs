@@ -8,5 +8,5 @@ namespace Service.Services.Interfaces;
 /// </summary>
 public interface INotificationBroadcaster
 {
-    Task SendNotificationAsync(int userId, NotificationDto notification);
+    Task SendNotificationAsync(Guid userId, NotificationDto notification);
 }
