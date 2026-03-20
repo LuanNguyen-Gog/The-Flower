@@ -103,10 +103,8 @@ public class CartService : ICartService
         var cart = await _cartRepository.GetActiveCartByUserIdAsync(userId);
         if (cart is null) return;
 
-        foreach (var item in cart.CartItems.ToList())
-            await _cartRepository.RemoveCartItemAsync(item);
-
-        await _cartRepository.RecalculateTotalAsync(cart.CartId);
+        await _cartRepository.UpdateCartStatusAsync(cart.CartId, "InActive");
+        await _cartRepository.CreateCartAsync(userId);
     }
 
     public async Task<int> GetCartItemCountAsync(Guid userId)

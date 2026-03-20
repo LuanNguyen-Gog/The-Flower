@@ -14,11 +14,11 @@ public class CartRepository : ICartRepository
         => await _context.Carts
             .Include(c => c.CartItems)
             .ThenInclude(ci => ci.Product)
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+            .FirstOrDefaultAsync(c => c.UserId == userId && c.Status == "Active");
 
     public async Task<Cart> CreateCartAsync(Guid userId)
     {
-        var cart = new Cart { UserId = userId, TotalPrice = 0};
+        var cart = new Cart { UserId = userId, TotalPrice = 0, Status = "Active" };
         _context.Carts.Add(cart);
         await _context.SaveChangesAsync();
         return cart;
