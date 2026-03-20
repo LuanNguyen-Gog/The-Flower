@@ -1,10 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using PayOS;
-using PayOS.Exceptions;
-using PayOS.Models.V2.PaymentRequests;
-using PayOS.Models.Webhooks;
-using PayOS.Resources.V2.PaymentRequests;
-using PayOS.Resources.Webhooks;
 using Repository.Models;
 using Repository.Repositories.Interfaces;
 using Service.DTOs.Orders;
@@ -19,7 +13,7 @@ public class OrderService : IOrderService
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotificationService _notificationService;
-    private readonly PayOSClient _payOsClient;
+    private readonly IConfiguration _configuration;
 
     public OrderService(
         IOrderRepository orderRepository,
@@ -34,27 +28,17 @@ public class OrderService : IOrderService
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _notificationService = notificationService;
-
-        var cfg = configuration.GetSection("PayOS");
-        _payOsClient = new PayOSClient(new PayOSOptions
-        {
-            ClientId = cfg["ClientId"]!,
-            ApiKey = cfg["ApiKey"]!,
-            ChecksumKey = cfg["ChecksumKey"]!
-        });
+        _configuration = configuration;
     }
 
-    public async Task<CreateOrderResponseDto> CreateOrderAsync(int userId, CreateOrderDto dto)
+    // ── Create Order ─────────────────────────────────────────────────────────
+
+    public async Task<CreateOrderResponseDto> CreateOrderAsync(int userId, CreateOrderDto dto, string ipAddress)
     {
         try
         {
-            // Validate input
             if (string.IsNullOrWhiteSpace(dto.BillingAddress))
                 throw new InvalidOperationException("Billing address is required.");
-
-            if (dto.PaymentMethod.Equals("PayOS", StringComparison.OrdinalIgnoreCase) 
-                && (string.IsNullOrWhiteSpace(dto.ReturnUrl) || string.IsNullOrWhiteSpace(dto.CancelUrl)))
-                throw new InvalidOperationException("Return URL and Cancel URL are required for PayOS payment.");
 
             return await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
@@ -64,61 +48,53 @@ public class OrderService : IOrderService
                 if (!cart.CartItems.Any())
                     throw new InvalidOperationException("Cart is empty.");
 
-                // Validate cart data
                 if (cart.TotalPrice <= 0)
                     throw new InvalidOperationException("Cart total price is invalid.");
 
                 if (cart.CartItems.Any(ci => ci.Product is null))
                     throw new InvalidOperationException("Cart contains invalid product(s).");
 
-                // Create order
+                // Tạo Order
                 var order = await _orderRepository.CreateAsync(new Order
                 {
-                    CartId = cart.CartId,
-                    UserId = userId,
+                    CartId        = cart.CartId,
+                    UserId        = userId,
                     PaymentMethod = dto.PaymentMethod,
                     BillingAddress = dto.BillingAddress,
-                    OrderStatus = "Pending",
-                    OrderDate = DateTime.UtcNow
+                    OrderStatus   = "Pending",
+                    OrderDate     = DateTime.UtcNow
                 });
 
-                // Create payment record
+                // Tạo Payment record
                 await _orderRepository.CreatePaymentAsync(new Payment
                 {
-                    OrderId = order.OrderId,
-                    Amount = cart.TotalPrice,
-                    PaymentDate = DateTime.UtcNow,
+                    OrderId       = order.OrderId,
+                    Amount        = cart.TotalPrice,
+                    PaymentDate   = DateTime.UtcNow,
                     PaymentStatus = "Pending"
                 });
 
-                // Update cart status to CheckedOut
+                // Cart → CheckedOut
                 await _cartRepository.UpdateCartStatusAsync(cart.CartId, "CheckedOut");
 
-                // Handle payment method
                 string? paymentUrl = null;
 
-                if (dto.PaymentMethod.Equals("PayOS", StringComparison.OrdinalIgnoreCase))
+                if (dto.PaymentMethod.Equals("VnPay", StringComparison.OrdinalIgnoreCase))
                 {
-                    try
-                    {
-                        paymentUrl = await CreatePayOsLinkAsync(order.OrderId, cart, dto);
-                    }
-                    catch (HttpRequestException ex)
-                    {
-                        throw new InvalidOperationException("Failed to connect to PayOS service. Please try again later.", ex);
-                    }
-                    catch (PayOSException ex)
-                    {
-                        throw new InvalidOperationException($"PayOS error: {ex.Message}", ex);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException("An unexpected error occurred while creating PayOS payment link.", ex);
-                    }
+                    // ── VnPay ─────────────────────────────────────────────
+                    var cfg = _configuration.GetSection("VnPay");
+                    paymentUrl = VnPayHelper.BuildPaymentUrl(
+                        orderId:    order.OrderId,
+                        amountVnd:  (long)cart.TotalPrice,
+                        returnUrl:  cfg["ReturnUrl"]!,
+                        ipAddress:  ipAddress,
+                        tmnCode:    cfg["TmnCode"]!,
+                        hashSecret: cfg["HashSecret"]!,
+                        baseUrl:    cfg["BaseUrl"]!);
                 }
-                else
+                else if (dto.PaymentMethod.Equals("COD", StringComparison.OrdinalIgnoreCase))
                 {
-                    // COD payment
+                    // ── COD ───────────────────────────────────────────────
                     order.OrderStatus = "Confirmed";
                     await _orderRepository.UpdateOrderAsync(order);
 
@@ -140,17 +116,20 @@ public class OrderService : IOrderService
                         Console.WriteLine($"Failed to send COD notification: {ex.Message}");
                     }
                 }
+                else
+                {
+                    throw new InvalidOperationException($"Payment method '{dto.PaymentMethod}' is not supported. Use 'VnPay' or 'COD'.");
+                }
 
-                // Save all changes
                 await _unitOfWork.SaveChangesAsync();
 
                 return new CreateOrderResponseDto
                 {
-                    OrderId = order.OrderId,
-                    OrderStatus = order.OrderStatus,
+                    OrderId       = order.OrderId,
+                    OrderStatus   = order.OrderStatus,
                     PaymentMethod = order.PaymentMethod,
-                    TotalAmount = cart.TotalPrice,
-                    PaymentUrl = paymentUrl
+                    TotalAmount   = cart.TotalPrice,
+                    PaymentUrl    = paymentUrl
                 };
             });
         }
@@ -163,6 +142,79 @@ public class OrderService : IOrderService
             throw new InvalidOperationException("An unexpected error occurred while creating the order. Please try again later.", ex);
         }
     }
+
+    // ── VnPay Return URL Handler ──────────────────────────────────────────────
+
+    public async Task<bool> HandleVnPayReturnAsync(IEnumerable<KeyValuePair<string, string>> queryParams)
+    {
+        var paramList = queryParams.ToList();
+
+        // Xác minh chữ ký HMAC-SHA512
+        var hashSecret = _configuration["VnPay:HashSecret"]!;
+        if (!VnPayHelper.VerifySignature(paramList, hashSecret))
+            throw new UnauthorizedAccessException("Invalid VnPay signature.");
+
+        // Lấy orderId từ vnp_TxnRef
+        var txnRef = paramList.FirstOrDefault(p => p.Key == "vnp_TxnRef").Value;
+        if (!int.TryParse(txnRef, out var orderId))
+            throw new InvalidOperationException("Invalid vnp_TxnRef.");
+
+        var isSuccess = VnPayHelper.IsSuccess(paramList);
+
+        return await _unitOfWork.ExecuteInTransactionAsync(async () =>
+        {
+            var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
+                ?? throw new InvalidOperationException($"Order {orderId} not found.");
+
+            // Cập nhật trạng thái đơn hàng
+            order.OrderStatus = isSuccess ? "Paid" : "PaymentFailed";
+            await _orderRepository.UpdateOrderAsync(order);
+
+            // Cập nhật trạng thái thanh toán
+            var payment = await _orderRepository.GetPaymentByOrderIdAsync(orderId);
+            if (payment is not null)
+            {
+                payment.PaymentStatus = isSuccess ? "Success" : "Failed";
+                await _orderRepository.UpdatePaymentAsync(payment);
+            }
+
+            if (isSuccess && order.CartId.HasValue)
+            {
+                // Cart → Payed
+                await _cartRepository.UpdateCartStatusAsync(order.CartId.Value, "Payed");
+
+                // Trừ stock từng sản phẩm
+                if (order.Cart?.CartItems.Any() == true)
+                {
+                    foreach (var cartItem in order.Cart.CartItems)
+                    {
+                        if (cartItem.Product is not null)
+                            cartItem.Product.StockQuantity = (cartItem.Product.StockQuantity ?? 0) - cartItem.Quantity;
+                    }
+                }
+
+                // Gửi notification
+                if (order.UserId.HasValue)
+                {
+                    try
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            order.UserId.Value,
+                            $"Đơn hàng #{order.OrderId} thanh toán thành công qua VnPay!");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to create notification: {ex.Message}");
+                    }
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return isSuccess;
+        });
+    }
+
+    // ── Queries ───────────────────────────────────────────────────────────────
 
     public async Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(int userId)
     {
@@ -177,116 +229,25 @@ public class OrderService : IOrderService
         return MapToDto(order);
     }
 
-    public async Task HandlePayOsWebhookAsync(Webhook webhookBody)
-    {
-        await _unitOfWork.ExecuteInTransactionAsync(async () =>
-        {
-            WebhookData data;
-            try
-            {
-                var webhooksResource = new Webhooks(_payOsClient);
-                data = await webhooksResource.VerifyAsync(webhookBody);
-            }
-            catch (WebhookException)
-            {
-                throw new UnauthorizedAccessException("Invalid PayOS webhook signature.");
-            }
-
-            var orderId = (int)data.OrderCode;
-            var order = await _orderRepository.GetByIdWithDetailsAsync(orderId);
-            if (order is null) return;
-
-            var isSuccess = data.Code == "00";
-            order.OrderStatus = isSuccess ? "Paid" : "PaymentFailed";
-            await _orderRepository.UpdateOrderAsync(order);
-
-            var payment = await _orderRepository.GetPaymentByOrderIdAsync(orderId);
-            if (payment is not null)
-            {
-                payment.PaymentStatus = isSuccess ? "Success" : "Failed";
-                await _orderRepository.UpdatePaymentAsync(payment);
-            }
-
-            // Soft-delete cart and update stock when payment successful
-            if (isSuccess && order.CartId.HasValue)
-            {
-                await _cartRepository.UpdateCartStatusAsync(order.CartId.Value, "Payed");
-
-                // Update stock quantity for each product in cart
-                if (order.Cart?.CartItems.Any() == true)
-                {
-                    foreach (var cartItem in order.Cart.CartItems)
-                    {
-                        if (cartItem.Product is not null)
-                        {
-                            cartItem.Product.StockQuantity = (cartItem.Product.StockQuantity ?? 0) - cartItem.Quantity;
-                        }
-                    }
-                }
-
-                // Create success notification
-                if (order.UserId.HasValue)
-                {
-                    try
-                    {
-                        await _notificationService.SendNotificationAsync(
-                            order.UserId.Value,
-                            $"Đơn hàng #{order.OrderId} thanh toán thành công!");
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log notification error but don't throw
-                        Console.WriteLine($"Failed to create notification: {ex.Message}");
-                    }
-                }
-            }
-
-            // Save all changes
-            await _unitOfWork.SaveChangesAsync();
-        });
-    }
-
-    private async Task<string> CreatePayOsLinkAsync(int orderId, Cart cart, CreateOrderDto dto)
-    {
-        var items = cart.CartItems.Select(ci => new PaymentLinkItem
-        {
-            Name = ci.Product?.ProductName ?? $"Product {ci.ProductId}",
-            Quantity = ci.Quantity,
-            Price = (int)ci.Price
-        }).ToList();
-
-        var request = new CreatePaymentLinkRequest
-        {
-            OrderCode = (long)orderId,
-            Amount = (int)cart.TotalPrice,
-            Description = $"DonHang {orderId}",
-            Items = items,
-            CancelUrl = dto.CancelUrl ?? "https://yourapp.com/payment/cancel",
-            ReturnUrl = dto.ReturnUrl ?? "https://yourapp.com/payment/success"
-        };
-
-        var paymentRequestsResource = new PaymentRequests(_payOsClient);
-        var result = await paymentRequestsResource.CreateAsync(request);
-        return result.CheckoutUrl;
-    }
+    // ── Mapper ────────────────────────────────────────────────────────────────
 
     private static OrderDto MapToDto(Order order) => new()
     {
-        OrderId = order.OrderId,
+        OrderId       = order.OrderId,
         PaymentMethod = order.PaymentMethod,
         BillingAddress = order.BillingAddress,
-        OrderStatus = order.OrderStatus,
-        OrderDate = order.OrderDate,
-        TotalAmount = order.Cart?.TotalPrice ?? 0,
+        OrderStatus   = order.OrderStatus,
+        OrderDate     = order.OrderDate,
+        TotalAmount   = order.Cart?.TotalPrice ?? 0,
         PaymentStatus = order.Payments.FirstOrDefault()?.PaymentStatus ?? "Pending",
         Items = order.Cart?.CartItems.Select(ci => new OrderItemDto
         {
-            ProductId = ci.ProductId ?? 0,
+            ProductId   = ci.ProductId ?? 0,
             ProductName = ci.Product?.ProductName ?? string.Empty,
-            ImageUrl = ci.Product?.ImageUrl,
-            UnitPrice = ci.Price,
-            Quantity = ci.Quantity,
-            SubTotal = ci.Price * ci.Quantity
+            ImageUrl    = ci.Product?.ImageUrl,
+            UnitPrice   = ci.Price,
+            Quantity    = ci.Quantity,
+            SubTotal    = ci.Price * ci.Quantity
         }).ToList() ?? []
     };
 }

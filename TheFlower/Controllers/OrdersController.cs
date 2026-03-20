@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PayOS.Models.Webhooks;
+
 using Service.DTOs.Orders;
 using Service.DTOs.Response;
 using Service.Services.Interfaces;
@@ -22,7 +22,7 @@ public class OrdersController : ControllerBase
     /// <summary>
     /// Tạo đơn hàng từ giỏ hàng hiện tại
     /// POST /api/orders
-    /// Body: { paymentMethod: "PayOS" | "COD", billingAddress: "...", returnUrl: "...", cancelUrl: "..." }
+    /// Body: { paymentMethod: "VnPay" | "COD", billingAddress: "..." }
     /// </summary>
     [HttpPost]
     [Authorize]
@@ -40,7 +40,8 @@ public class OrdersController : ControllerBase
 
         try
         {
-            var result = await _orderService.CreateOrderAsync(GetUserId(), dto);
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+            var result = await _orderService.CreateOrderAsync(GetUserId(), dto, ipAddress);
             return StatusCode(StatusCodes.Status201Created, new ResponseDto
             {
                 isSuccess = true,
@@ -167,23 +168,27 @@ public class OrdersController : ControllerBase
     }
 
     /// <summary>
-    /// PayOS Webhook — PayOS gọi endpoint này sau khi thanh toán
-    /// POST /api/orders/payos-webhook
-    /// ⚠️ Không cần JWT — PayOS tự xác thực bằng checksum signature
+    /// VnPay Return URL — VnPay redirect browser về đây sau khi thanh toán
+    /// GET /api/orders/vnpay-return
+    /// ⚠️ Không cần JWT — VnPay tự xác thực bằng HMAC-SHA512 signature
     /// </summary>
-    [HttpPost("payos-webhook")]
+    [HttpGet("vnpay-return")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> PayOsWebhook([FromBody] Webhook webhookBody)
+    public async Task<IActionResult> VnPayReturn()
     {
         try
         {
-            await _orderService.HandlePayOsWebhookAsync(webhookBody);
+            var queryParams = Request.Query
+                .Select(p => new KeyValuePair<string, string>(p.Key, p.Value.ToString()));
+
+            var isSuccess = await _orderService.HandleVnPayReturnAsync(queryParams);
+
             return Ok(new ResponseDto
             {
                 isSuccess = true,
-                Message = "Webhook processed successfully",
-                Data = null
+                Message   = isSuccess ? "Thanh toán thành công" : "Thanh toán thất bại",
+                Data      = new { isSuccess }
             });
         }
         catch (UnauthorizedAccessException ex)
@@ -191,8 +196,8 @@ public class OrdersController : ControllerBase
             return BadRequest(new ResponseDto
             {
                 isSuccess = false,
-                Message = ex.Message,
-                Data = null
+                Message   = ex.Message,
+                Data      = null
             });
         }
         catch (Exception ex)
@@ -200,8 +205,8 @@ public class OrdersController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
             {
                 isSuccess = false,
-                Message = ex.Message,
-                Data = null
+                Message   = ex.Message,
+                Data      = null
             });
         }
     }

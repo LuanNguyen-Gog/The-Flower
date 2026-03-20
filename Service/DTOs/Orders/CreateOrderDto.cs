@@ -10,7 +10,4 @@ public class CreateOrderDto
     [Required(ErrorMessage = "Billing address is required.")]
     [MaxLength(255)]
     public string BillingAddress { get; set; } = string.Empty;
-
-    public string? ReturnUrl { get; set; }
-    public string? CancelUrl { get; set; }
 }
