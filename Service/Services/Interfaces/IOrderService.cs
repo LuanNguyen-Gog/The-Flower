@@ -4,8 +4,8 @@ namespace Service.Services.Interfaces;
 
 public interface IOrderService
 {
-    Task<CreateOrderResponseDto> CreateOrderAsync(int userId, CreateOrderDto dto, string ipAddress);
-    Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(int userId);
-    Task<OrderDto?> GetOrderByIdAsync(int userId, int orderId);
+    Task<CreateOrderResponseDto> CreateOrderAsync(Guid userId, CreateOrderDto dto, string ipAddress);
+    Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(Guid userId);
+    Task<OrderDto?> GetOrderByIdAsync(Guid userId, Guid orderId);
     Task<bool> HandleVnPayReturnAsync(IEnumerable<KeyValuePair<string, string>> queryParams);
 }

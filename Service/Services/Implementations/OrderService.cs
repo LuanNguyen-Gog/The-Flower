@@ -33,7 +33,7 @@ public class OrderService : IOrderService
 
     // ── Create Order ─────────────────────────────────────────────────────────
 
-    public async Task<CreateOrderResponseDto> CreateOrderAsync(int userId, CreateOrderDto dto, string ipAddress)
+    public async Task<CreateOrderResponseDto> CreateOrderAsync(Guid userId, CreateOrderDto dto, string ipAddress)
     {
         try
         {
@@ -156,7 +156,7 @@ public class OrderService : IOrderService
 
         // Lấy orderId từ vnp_TxnRef
         var txnRef = paramList.FirstOrDefault(p => p.Key == "vnp_TxnRef").Value;
-        if (!int.TryParse(txnRef, out var orderId))
+        if (!Guid.TryParse(txnRef, out var orderId))
             throw new InvalidOperationException("Invalid vnp_TxnRef.");
 
         var isSuccess = VnPayHelper.IsSuccess(paramList);
@@ -216,13 +216,13 @@ public class OrderService : IOrderService
 
     // ── Queries ───────────────────────────────────────────────────────────────
 
-    public async Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(int userId)
+    public async Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(Guid userId)
     {
         var orders = await _orderRepository.GetByUserIdAsync(userId);
         return orders.Select(MapToDto);
     }
 
-    public async Task<OrderDto?> GetOrderByIdAsync(int userId, int orderId)
+    public async Task<OrderDto?> GetOrderByIdAsync(Guid userId, Guid orderId)
     {
         var order = await _orderRepository.GetByIdWithDetailsAsync(orderId);
         if (order is null || order.UserId != userId) return null;
@@ -242,7 +242,7 @@ public class OrderService : IOrderService
         PaymentStatus = order.Payments.FirstOrDefault()?.PaymentStatus ?? "Pending",
         Items = order.Cart?.CartItems.Select(ci => new OrderItemDto
         {
-            ProductId   = ci.ProductId ?? 0,
+            ProductId   = ci.ProductId ?? Guid.Empty,
             ProductName = ci.Product?.ProductName ?? string.Empty,
             ImageUrl    = ci.Product?.ImageUrl,
             UnitPrice   = ci.Price,

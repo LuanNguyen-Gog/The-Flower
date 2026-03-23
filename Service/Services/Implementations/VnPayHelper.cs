@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Net;
 
 namespace Service.Services.Implementations;
 
@@ -13,7 +14,7 @@ public static class VnPayHelper
     /// Build URL thanh toán VnPay từ thông tin đơn hàng.
     /// </summary>
     public static string BuildPaymentUrl(
-        int orderId,
+        Guid orderId,
         long amountVnd,
         string returnUrl,
         string ipAddress,
@@ -39,11 +40,14 @@ public static class VnPayHelper
             ["vnp_ExpireDate"] = GetVnPayTime(DateTime.UtcNow.AddMinutes(15)),
         };
 
-        // Build query string (sorted, URL-encoded)
-        var rawData = BuildRawData(vnpParams);
-        var secureHash = HmacSha512(hashSecret, rawData);
+        // VNPay yêu cầu:
+        // - hashData: key=value chưa URL-encode
+        // - query: key=value đã URL-encode
+        var hashData = BuildHashData(vnpParams);
+        var queryData = BuildQueryData(vnpParams);
+        var secureHash = HmacSha512(hashSecret, hashData);
 
-        return $"{baseUrl}?{rawData}&vnp_SecureHash={secureHash}";
+        return $"{baseUrl}?{queryData}&vnp_SecureHash={secureHash}";
     }
 
     /// <summary>
@@ -69,8 +73,8 @@ public static class VnPayHelper
                 filteredParams[p.Key] = p.Value;
         }
 
-        var rawData = BuildRawData(filteredParams);
-        var computedHash = HmacSha512(hashSecret, rawData);
+        var hashData = BuildHashData(filteredParams);
+        var computedHash = HmacSha512(hashSecret, hashData);
 
         return string.Equals(computedHash, receivedHash, StringComparison.OrdinalIgnoreCase);
     }
@@ -83,7 +87,7 @@ public static class VnPayHelper
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
-    private static string BuildRawData(SortedDictionary<string, string> sortedParams)
+    private static string BuildHashData(SortedDictionary<string, string> sortedParams)
     {
         var sb = new StringBuilder();
         foreach (var (key, value) in sortedParams)
@@ -91,9 +95,25 @@ public static class VnPayHelper
             if (!string.IsNullOrEmpty(value))
             {
                 if (sb.Length > 0) sb.Append('&');
-                sb.Append(Uri.EscapeDataString(key));
+                sb.Append(key);
                 sb.Append('=');
-                sb.Append(Uri.EscapeDataString(value));
+                sb.Append(WebUtility.UrlEncode(value));
+            }
+        }
+        return sb.ToString();
+    }
+
+    private static string BuildQueryData(SortedDictionary<string, string> sortedParams)
+    {
+        var sb = new StringBuilder();
+        foreach (var (key, value) in sortedParams)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                if (sb.Length > 0) sb.Append('&');
+                sb.Append(WebUtility.UrlEncode(key));
+                sb.Append('=');
+                sb.Append(WebUtility.UrlEncode(value));
             }
         }
         return sb.ToString();
