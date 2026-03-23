@@ -47,10 +47,10 @@ public class ProductsController : ControllerBase
     /// Xem chi tiết một loại hoa
     /// GET /api/products/{id}
     /// </summary>
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProduct(int id)
+    public async Task<IActionResult> GetProduct(Guid id)
     {
         try
         {
@@ -152,10 +152,10 @@ public class ProductsController : ControllerBase
     /// Cập nhật thông tin sản phẩm
     /// PUT /api/products/{id}
     /// </summary>
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto dto)
+    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductDto dto)
     {
         try
         {
@@ -206,10 +206,10 @@ public class ProductsController : ControllerBase
     /// Xóa sản phẩm (soft delete - đặt status thành InActive)
     /// DELETE /api/products/{id}
     /// </summary>
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteProduct(int id)
+    public async Task<IActionResult> DeleteProduct(Guid id)
     {
         try
         {

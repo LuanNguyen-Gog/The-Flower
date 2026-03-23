@@ -5,7 +5,7 @@ namespace Service.DTOs.Cart;
 public class AddToCartDto
 {
     [Required]
-    public int ProductId { get; set; }
+    public Guid ProductId { get; set; }
 
     [Required]
     [Range(1, 100, ErrorMessage = "Quantity must be between 1 and 100.")]

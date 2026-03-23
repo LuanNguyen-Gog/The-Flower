@@ -6,8 +6,8 @@ namespace Service.Services.Interfaces;
 public interface ICategoryService
 {
     Task<IEnumerable<GetCategoryDto>> GetAllCategoriesAsync();
-    Task<GetCategoryDto?> GetCategoryByIdAsync(int id);
+    Task<GetCategoryDto?> GetCategoryByIdAsync(Guid id);
     Task<GetCategoryDto> CreateCategoryAsync(CreateCategoryDto dto);
-    Task<bool> UpdateCategoryAsync(int id, UpdateCategoryDto dto);
-    Task<bool> DeleteCategoryAsync(int id);
+    Task<bool> UpdateCategoryAsync(Guid id, UpdateCategoryDto dto);
+    Task<bool> DeleteCategoryAsync(Guid id);
 }

@@ -47,10 +47,10 @@ public class MapsController : ControllerBase
     /// Lấy chi tiết một cửa hàng theo ID
     /// GET /api/maps/stores/{id}
     /// </summary>
-    [HttpGet("stores/{id:int}")]
+    [HttpGet("stores/{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetStore(int id)
+    public async Task<IActionResult> GetStore(Guid id)
     {
         try
         {
@@ -123,10 +123,10 @@ public class MapsController : ControllerBase
     /// Cập nhật thông tin cửa hàng - Backend sẽ geocode địa chỉ mới
     /// PUT /api/maps/stores/{id}
     /// </summary>
-    [HttpPut("stores/{id:int}")]
+    [HttpPut("stores/{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateStore(int id, [FromBody] UpdateStoreLocationDto dto)
+    public async Task<IActionResult> UpdateStore(Guid id, [FromBody] UpdateStoreLocationDto dto)
     {
         try
         {
@@ -177,10 +177,10 @@ public class MapsController : ControllerBase
     /// Xóa cửa hàng (soft delete - đặt status thành InActive)
     /// DELETE /api/maps/stores/{id}
     /// </summary>
-    [HttpDelete("stores/{id:int}")]
+    [HttpDelete("stores/{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteStore(int id)
+    public async Task<IActionResult> DeleteStore(Guid id)
     {
         try
         {

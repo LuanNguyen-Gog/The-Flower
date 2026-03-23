@@ -47,10 +47,10 @@ public class CategoriesController : ControllerBase
     /// Lấy chi tiết danh mục theo ID
     /// GET /api/categories/{id}
     /// </summary>
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCategoryById(int id)
+    public async Task<IActionResult> GetCategoryById(Guid id)
     {
         try
         {
@@ -135,11 +135,11 @@ public class CategoriesController : ControllerBase
     /// Cập nhật danh mục
     /// PUT /api/categories/{id}
     /// </summary>
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateCategory(int id, UpdateCategoryDto dto)
+    public async Task<IActionResult> UpdateCategory(Guid id, UpdateCategoryDto dto)
     {
         try
         {
@@ -192,10 +192,10 @@ public class CategoriesController : ControllerBase
     /// Xóa danh mục
     /// DELETE /api/categories/{id}
     /// </summary>
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteCategory(int id)
+    public async Task<IActionResult> DeleteCategory(Guid id)
     {
         try
         {

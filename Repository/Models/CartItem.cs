@@ -7,11 +7,11 @@ namespace Repository.Models;
 
 public partial class CartItem
 {
-    public int CartItemId { get; set; }
+    public Guid CartItemId { get; set; } = Guid.NewGuid();
 
-    public int? CartId { get; set; }
+    public Guid? CartId { get; set; }
 
-    public int? ProductId { get; set; }
+    public Guid? ProductId { get; set; }
 
     public int Quantity { get; set; }
 

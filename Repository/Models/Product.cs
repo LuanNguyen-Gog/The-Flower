@@ -7,7 +7,7 @@ namespace Repository.Models;
 
 public partial class Product
 {
-    public int ProductId { get; set; }
+    public Guid ProductId { get; set; } = Guid.NewGuid();
 
     public string ProductName { get; set; }
 
@@ -21,7 +21,7 @@ public partial class Product
 
     public string ImageUrl { get; set; }
 
-    public int? CategoryId { get; set; }
+    public Guid? CategoryId { get; set; }
 
     public int? StockQuantity { get; set; }
 

@@ -11,8 +11,8 @@ public class SendMessageDto
 
 public class ChatMessageDto
 {
-    public int ChatMessageId { get; set; }
-    public int UserId { get; set; }
+    public Guid ChatMessageId { get; set; }
+    public Guid UserId { get; set; }
     public string Message { get; set; } = string.Empty;
     public DateTime SentAt { get; set; }
 }

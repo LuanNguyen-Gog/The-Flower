@@ -16,8 +16,8 @@ public class ChatsController : ControllerBase
 
     public ChatsController(IChatService chatService) => _chatService = chatService;
 
-    private int GetUserId() =>
-        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId() =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     /// <summary>
     /// Tải lịch sử tin nhắn của user (có phân trang)

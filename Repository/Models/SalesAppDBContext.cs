@@ -39,7 +39,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.CartId).HasName("PK__Carts__51BCD797F0DB6A45");
 
-            entity.Property(e => e.CartId).HasColumnName("CartID");
+            entity.Property(e => e.CartId)
+                .HasColumnName("CartID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
@@ -52,7 +54,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.CartItemId).HasName("PK__CartItem__488B0B2A9F9238DB");
 
-            entity.Property(e => e.CartItemId).HasColumnName("CartItemID");
+            entity.Property(e => e.CartItemId)
+                .HasColumnName("CartItemID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.CartId).HasColumnName("CartID");
             entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ProductId).HasColumnName("ProductID");
@@ -70,7 +74,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A2B09419C4A");
 
-            entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
+            entity.Property(e => e.CategoryId)
+                .HasColumnName("CategoryID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.CategoryName)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -80,7 +86,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.ChatMessageId).HasName("PK__ChatMess__9AB61055F19009D0");
 
-            entity.Property(e => e.ChatMessageId).HasColumnName("ChatMessageID");
+            entity.Property(e => e.ChatMessageId)
+                .HasColumnName("ChatMessageID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.SentAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -95,7 +103,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__20CF2E32886F8B06");
 
-            entity.Property(e => e.NotificationId).HasColumnName("NotificationID");
+            entity.Property(e => e.NotificationId)
+                .HasColumnName("NotificationID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
@@ -111,7 +121,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BAF6407C252");
 
-            entity.Property(e => e.OrderId).HasColumnName("OrderID");
+            entity.Property(e => e.OrderId)
+                .HasColumnName("OrderID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.BillingAddress)
                 .IsRequired()
                 .HasMaxLength(255);
@@ -140,7 +152,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A586712B0EE");
 
-            entity.Property(e => e.PaymentId).HasColumnName("PaymentID");
+            entity.Property(e => e.PaymentId)
+                .HasColumnName("PaymentID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.OrderId).HasColumnName("OrderID");
             entity.Property(e => e.PaymentDate)
@@ -159,7 +173,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6ED1596A373");
 
-            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.ProductId)
+                .HasColumnName("ProductID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.BriefDescription).HasMaxLength(255);
             entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
             entity.Property(e => e.ImageUrl)
@@ -180,7 +196,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.LocationId).HasName("PK__StoreLoc__E7FEA4779875DF89");
 
-            entity.Property(e => e.LocationId).HasColumnName("LocationID");
+            entity.Property(e => e.LocationId)
+                .HasColumnName("LocationID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.Address)
                 .IsRequired()
                 .HasMaxLength(255);
@@ -192,7 +210,9 @@ public partial class SalesAppDBContext : DbContext
         {
             entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACCDC3284B");
 
-            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.UserId)
+                .HasColumnName("UserID")
+                .HasDefaultValueSql("(newsequentialid())");
             entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.Email)
                 .IsRequired()
@@ -220,7 +240,7 @@ public partial class SalesAppDBContext : DbContext
             entity.HasData(
                 new User
                 {
-                    UserId = 1,
+                    UserId = new Guid("a1111111-1111-1111-1111-111111111111"),
                     Username = "admin",
                     PasswordHash = "$2a$11$Ws81kJjxnASgz4bsG7eKN.coK87b1QjKDskqxOFfM9IFDiXO1W9sO", // hashed "admin123"
                     Email = "admin@gmail.com",

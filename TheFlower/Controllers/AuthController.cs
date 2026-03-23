@@ -18,8 +18,8 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    private int GetUserId() =>
-        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId() =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     /// <summary>
     /// Đăng ký tài khoản mới và kích hoạt ngay

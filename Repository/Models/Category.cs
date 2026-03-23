@@ -7,7 +7,7 @@ namespace Repository.Models;
 
 public partial class Category
 {
-    public int CategoryId { get; set; }
+    public Guid CategoryId { get; set; } = Guid.NewGuid();
 
     public string CategoryName { get; set; }
 

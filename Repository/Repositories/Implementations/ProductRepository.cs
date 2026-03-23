@@ -11,7 +11,7 @@ public class ProductRepository : IProductRepository
     public ProductRepository(SalesAppDBContext context) => _context = context;
 
     public async Task<(IEnumerable<Product> Items, int TotalCount)> GetPagedAsync(
-        int page, int pageSize, int? categoryId,
+        int page, int pageSize, Guid? categoryId,
         decimal? minPrice, decimal? maxPrice,
         string? sortBy, string? sortOrder)
     {
@@ -45,7 +45,7 @@ public class ProductRepository : IProductRepository
         return (items, totalCount);
     }
 
-    public async Task<Product?> GetByIdAsync(int id)
+    public async Task<Product?> GetByIdAsync(Guid id)
         => await _context.Products
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.ProductId == id);
@@ -68,7 +68,7 @@ public class ProductRepository : IProductRepository
         return await _context.SaveChangesAsync() > 0;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(Guid id)
     {
         var product = await _context.Products.FindAsync(id);
         if (product == null)

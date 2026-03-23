@@ -4,11 +4,11 @@ namespace Repository.Repositories.Interfaces;
 
 public interface INotificationRepository
 {
-    Task<IEnumerable<Notification>> GetByUserIdAsync(int userId);
-    Task<int> GetUnreadCountAsync(int userId);
-    Task<Notification?> GetByIdAsync(int id);
+    Task<IEnumerable<Notification>> GetByUserIdAsync(Guid userId);
+    Task<int> GetUnreadCountAsync(Guid userId);
+    Task<Notification?> GetByIdAsync(Guid id);
     Task<Notification> CreateAsync(Notification notification);
-    Task MarkAsReadAsync(int notificationId);
-    Task MarkAllAsReadAsync(int userId);
-    Task DeleteAsync(int notificationId);
+    Task MarkAsReadAsync(Guid notificationId);
+    Task MarkAllAsReadAsync(Guid userId);
+    Task DeleteAsync(Guid notificationId);
 }

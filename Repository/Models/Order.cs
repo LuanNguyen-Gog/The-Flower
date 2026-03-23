@@ -7,11 +7,11 @@ namespace Repository.Models;
 
 public partial class Order
 {
-    public int OrderId { get; set; }
+    public Guid OrderId { get; set; } = Guid.NewGuid();
 
-    public int? CartId { get; set; }
+    public Guid? CartId { get; set; }
 
-    public int? UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     public string PaymentMethod { get; set; }
 

@@ -16,8 +16,8 @@ public class NotificationsController : ControllerBase
     public NotificationsController(INotificationService notificationService)
         => _notificationService = notificationService;
 
-    private int GetUserId() =>
-        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId() =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     /// <summary>
     /// Lấy tất cả thông báo của user
@@ -81,11 +81,11 @@ public class NotificationsController : ControllerBase
     /// Đánh dấu một thông báo đã đọc
     /// PUT /api/notifications/{id}/read
     /// </summary>
-    [HttpPut("{id:int}/read")]
+    [HttpPut("{id:guid}/read")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> MarkAsRead(int id)
+    public async Task<IActionResult> MarkAsRead(Guid id)
     {
         try
         {
@@ -159,11 +159,11 @@ public class NotificationsController : ControllerBase
     /// Xóa một thông báo
     /// DELETE /api/notifications/{id}
     /// </summary>
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> DeleteNotification(int id)
+    public async Task<IActionResult> DeleteNotification(Guid id)
     {
         try
         {

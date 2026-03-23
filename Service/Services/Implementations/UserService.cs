@@ -47,7 +47,7 @@ public class UserService : IUserService
         return MapToAdminDto(created);
     }
 
-    public async Task<AdminUserDto> UpdateUserAsync(int userId, UpdateAdminUserDto dto)
+    public async Task<AdminUserDto> UpdateUserAsync(Guid userId, UpdateAdminUserDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException("User not found.");
@@ -73,7 +73,7 @@ public class UserService : IUserService
         return MapToAdminDto(updated);
     }
 
-    public async Task<bool> DeleteUserAsync(int userId)
+    public async Task<bool> DeleteUserAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user is null)
@@ -84,7 +84,7 @@ public class UserService : IUserService
         return true;
     }
 
-    public async Task<UserProfileDto> GetUserProfileAsync(int userId)
+    public async Task<UserProfileDto> GetUserProfileAsync(Guid userId)
     {
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException("User not found.");
@@ -92,7 +92,7 @@ public class UserService : IUserService
         return MapToProfileDto(user);
     }
 
-    public async Task<UserProfileDto> UpdateUserProfileAsync(int userId, UpdateProfileDto dto)
+    public async Task<UserProfileDto> UpdateUserProfileAsync(Guid userId, UpdateProfileDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException("User not found.");
@@ -107,7 +107,7 @@ public class UserService : IUserService
         return MapToProfileDto(updated);
     }
 
-    public async Task ChangePasswordAsync(int userId, ChangeUserPasswordDto dto)
+    public async Task ChangePasswordAsync(Guid userId, ChangeUserPasswordDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException("User not found.");

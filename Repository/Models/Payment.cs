@@ -7,9 +7,9 @@ namespace Repository.Models;
 
 public partial class Payment
 {
-    public int PaymentId { get; set; }
+    public Guid PaymentId { get; set; } = Guid.NewGuid();
 
-    public int? OrderId { get; set; }
+    public Guid? OrderId { get; set; }
 
     public decimal Amount { get; set; }
 

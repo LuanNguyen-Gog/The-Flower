@@ -18,12 +18,12 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    private int GetUserId()
+    private Guid GetUserId()
     {
         var claimValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? throw new UnauthorizedAccessException("Invalid token.");
 
-        return int.Parse(claimValue);
+        return Guid.Parse(claimValue);
     }
 
     [HttpGet]
@@ -52,9 +52,9 @@ public class UsersController : ControllerBase
         }
     }
 
-    [HttpPut("{id:int}")]
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateAdminUserDto dto)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateAdminUserDto dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -74,9 +74,9 @@ public class UsersController : ControllerBase
         }
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> DeleteUser(int id)
+    public async Task<IActionResult> DeleteUser(Guid id)
     {
         if (GetUserId() == id)
             return BadRequest(new { message = "You cannot delete your own account." });

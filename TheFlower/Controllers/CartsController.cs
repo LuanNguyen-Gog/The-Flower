@@ -16,8 +16,8 @@ public class CartsController : ControllerBase
 
     public CartsController(ICartService cartService) => _cartService = cartService;
 
-    private int GetUserId() =>
-        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId() =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     /// <summary>
     /// Lấy giỏ hàng hiện tại của user (tạo mới nếu chưa có)
@@ -109,11 +109,11 @@ public class CartsController : ControllerBase
     /// Cập nhật số lượng một item trong giỏ hàng
     /// PUT /api/carts/items/{cartItemId}
     /// </summary>
-    [HttpPut("items/{cartItemId:int}")]
+    [HttpPut("items/{cartItemId:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateItem(int cartItemId, [FromBody] UpdateCartItemDto dto)
+    public async Task<IActionResult> UpdateItem(Guid cartItemId, [FromBody] UpdateCartItemDto dto)
     {
         if (!ModelState.IsValid)
             return BadRequest(new ResponseDto
@@ -161,10 +161,10 @@ public class CartsController : ControllerBase
     /// Xóa một item khỏi giỏ hàng
     /// DELETE /api/carts/items/{cartItemId}
     /// </summary>
-    [HttpDelete("items/{cartItemId:int}")]
+    [HttpDelete("items/{cartItemId:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RemoveItem(int cartItemId)
+    public async Task<IActionResult> RemoveItem(Guid cartItemId)
     {
         try
         {
