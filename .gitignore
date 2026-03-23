@@ -274,3 +274,4 @@ __pycache__/
 bin\\Debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore
+TheFlower/appsettings.json

@@ -135,7 +135,7 @@ public class OrderService : IOrderService
         return MapToDto(order);
     }
 
-    public async Task HandlePayOsWebhookAsync(Webhook webhookBody)
+    public Task HandlePayOsWebhookAsync(Webhook webhookBody)
     {
         throw new InvalidOperationException("PayOS tạm thời chưa hỗ trợ khi hệ thống dùng Guid ID.");
     }

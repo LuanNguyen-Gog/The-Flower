@@ -35,4 +35,14 @@ public class ChatRepository : IChatRepository
         _context.ChatMessages.AddRange(messageList);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<int> CountMessagesByUserIdAsync(Guid userId)
+        => await _context.ChatMessages.CountAsync(m => m.UserId == userId);
+
+    public async Task<IEnumerable<Guid>> GetAllSenderUserIdsAsync()
+        => await _context.ChatMessages
+            .Where(m => !m.IsFromAdmin && m.UserId != null)
+            .Select(m => m.UserId!.Value)
+            .Distinct()
+            .ToListAsync();
 }
