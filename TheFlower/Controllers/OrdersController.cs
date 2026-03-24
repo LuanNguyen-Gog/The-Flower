@@ -41,7 +41,8 @@ public class OrdersController : ControllerBase
         try
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
-            var result = await _orderService.CreateOrderAsync(GetUserId(), dto, ipAddress);
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+            var result = await _orderService.CreateOrderAsync(GetUserId(), dto, ipAddress, baseUrl);
             return StatusCode(StatusCodes.Status201Created, new ResponseDto
             {
                 isSuccess = true,
@@ -270,10 +271,16 @@ public class OrdersController : ControllerBase
       <div class='row'><span class='label'>Kenh thanh toan</span><span class='value'>VnPay</span></div>
     </div>
     <div class='actions'>
-      <a class='btn btn-primary' href='/swagger/index.html'>Ve trang API</a>
+      <a class='btn btn-primary' href='theflower://payment_result?success={isSuccess.ToString().ToLower()}&orderId={orderId}'>Quay lai ung dung</a>
       <a class='btn btn-light' href='/api/orders'>Xem danh sach don</a>
     </div>
   </div>
+  <script>
+    // Tu dong chuyen ve app sau 2 giay
+    setTimeout(function() {{
+      window.location.href = 'theflower://payment_result?success={isSuccess.ToString().ToLower()}&orderId={orderId}';
+    }}, 2000);
+  </script>
 </body>
 </html>";
 

@@ -33,7 +33,7 @@ public class OrderService : IOrderService
 
     // ── Create Order ─────────────────────────────────────────────────────────
 
-    public async Task<CreateOrderResponseDto> CreateOrderAsync(Guid userId, CreateOrderDto dto, string ipAddress)
+    public async Task<CreateOrderResponseDto> CreateOrderAsync(Guid userId, CreateOrderDto dto, string ipAddress, string baseUrl)
     {
         try
         {
@@ -83,10 +83,16 @@ public class OrderService : IOrderService
                 {
                     // ── VnPay ─────────────────────────────────────────────
                     var cfg = _configuration.GetSection("VnPay");
+                    // Combine baseUrl with the relative ReturnUrl from config
+                    var relativeReturnUrl = cfg["ReturnUrl"]!;
+                    var fullReturnUrl = relativeReturnUrl.StartsWith("http") 
+                        ? relativeReturnUrl 
+                        : $"{baseUrl.TrimEnd('/')}/{relativeReturnUrl.TrimStart('/')}";
+
                     paymentUrl = VnPayHelper.BuildPaymentUrl(
                         orderId:    order.OrderId,
                         amountVnd:  (long)cart.TotalPrice,
-                        returnUrl:  cfg["ReturnUrl"]!,
+                        returnUrl:  fullReturnUrl,
                         ipAddress:  ipAddress,
                         tmnCode:    cfg["TmnCode"]!,
                         hashSecret: cfg["HashSecret"]!,
@@ -227,12 +233,6 @@ public class OrderService : IOrderService
         var order = await _orderRepository.GetByIdWithDetailsAsync(orderId);
         if (order is null || order.UserId != userId) return null;
         return MapToDto(order);
-    }
-
-    // ── Mapper ────────────────────────────────────────────────────────────────
-    public Task HandlePayOsWebhookAsync(Webhook webhookBody)
-    {
-        throw new InvalidOperationException("PayOS tạm thời chưa hỗ trợ khi hệ thống dùng Guid ID.");
     }
 
     private static OrderDto MapToDto(Order order) => new()
