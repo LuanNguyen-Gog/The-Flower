@@ -230,6 +230,10 @@ public class OrderService : IOrderService
     }
 
     // ── Mapper ────────────────────────────────────────────────────────────────
+    public Task HandlePayOsWebhookAsync(Webhook webhookBody)
+    {
+        throw new InvalidOperationException("PayOS tạm thời chưa hỗ trợ khi hệ thống dùng Guid ID.");
+    }
 
     private static OrderDto MapToDto(Order order) => new()
     {
