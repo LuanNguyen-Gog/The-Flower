@@ -182,7 +182,7 @@ using (var scope = app.Services.CreateScope())
                 PhoneNumber = adminSection["PhoneNumber"],
                 Address = adminSection["Address"],
                 Status = adminSection["Status"] ?? "Active",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow.AddHours(7)
             });
         }
         else

@@ -45,4 +45,11 @@ public class ChatRepository : IChatRepository
             .Select(m => m.UserId!.Value)
             .Distinct()
             .ToListAsync();
+
+    public async Task DeleteMessagesByUserIdAsync(Guid userId)
+    {
+        var messages = _context.ChatMessages.Where(m => m.UserId == userId);
+        _context.ChatMessages.RemoveRange(messages);
+        await _context.SaveChangesAsync();
+    }
 }

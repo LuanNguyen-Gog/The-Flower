@@ -45,4 +45,9 @@ public interface IChatService
 
     /// <summary>Stop the background persistence job and perform final flush</summary>
     Task StopAsync();
+
+    /// <summary>
+    /// Clear chat history for a specific user (cache + DB)
+    /// </summary>
+    Task ClearChatAsync(Guid userId);
 }

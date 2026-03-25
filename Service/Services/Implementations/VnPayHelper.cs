@@ -31,7 +31,7 @@ public static class VnPayHelper
             ["vnp_Amount"]     = (amountVnd * 100).ToString(),
             ["vnp_CurrCode"]   = "VND",
             ["vnp_TxnRef"]     = orderId.ToString(),
-            ["vnp_OrderInfo"]  = $"Thanh toan don hang {orderId}",
+            ["vnp_OrderInfo"]  = $"Thanh toán đơn hàng: {orderId}",
             ["vnp_OrderType"]  = "other",
             ["vnp_Locale"]     = "vn",
             ["vnp_ReturnUrl"]  = returnUrl,

@@ -31,7 +31,12 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetUsers()
     {
         var users = await _userService.GetUsersAsync();
-        return Ok(users);
+        return Ok(new ResponseDto
+        {
+            isSuccess = true,
+            Message = "Users retrieved successfully",
+            Data = users
+        });
     }
 
     [HttpPost]
@@ -39,16 +44,21 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> CreateUser([FromBody] CreateAdminUserDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new ResponseDto { isSuccess = false, Message = "Invalid input", Data = ModelState });
 
         try
         {
             var created = await _userService.CreateUserAsync(dto);
-            return StatusCode(StatusCodes.Status201Created, created);
+            return StatusCode(StatusCodes.Status201Created, new ResponseDto
+            {
+                isSuccess = true,
+                Message = "User created successfully",
+                Data = created
+            });
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return Conflict(new ResponseDto { isSuccess = false, Message = ex.Message });
         }
     }
 
@@ -57,20 +67,25 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateAdminUserDto dto)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+            return BadRequest(new ResponseDto { isSuccess = false, Message = "Invalid input", Data = ModelState });
 
         try
         {
             var updated = await _userService.UpdateUserAsync(id, dto);
-            return Ok(updated);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "User updated successfully",
+                Data = updated
+            });
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new ResponseDto { isSuccess = false, Message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            return Conflict(new ResponseDto { isSuccess = false, Message = ex.Message });
         }
     }
 
@@ -79,13 +94,13 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> DeleteUser(Guid id)
     {
         if (GetUserId() == id)
-            return BadRequest(new { message = "You cannot delete your own account." });
+            return BadRequest(new ResponseDto { isSuccess = false, Message = "You cannot delete your own account." });
 
         var deleted = await _userService.DeleteUserAsync(id);
         if (!deleted)
-            return NotFound(new { message = "User not found." });
+            return NotFound(new ResponseDto { isSuccess = false, Message = "User not found." });
 
-        return NoContent();
+        return Ok(new ResponseDto { isSuccess = true, Message = "User deleted successfully" });
     }
 
     [HttpGet("profile")]

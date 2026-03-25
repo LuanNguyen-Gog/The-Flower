@@ -21,4 +21,9 @@ public interface IChatRepository
     /// Get all distinct userIds that have sent messages (for admin view)
     /// </summary>
     Task<IEnumerable<Guid>> GetAllSenderUserIdsAsync();
+
+    /// <summary>
+    /// Delete all chat messages for a specific user
+    /// </summary>
+    Task DeleteMessagesByUserIdAsync(Guid userId);
 }

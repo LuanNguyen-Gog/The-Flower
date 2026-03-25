@@ -118,7 +118,7 @@ public class ChatService : IChatService
         {
             UserId = userId,
             Message = dto.Message,
-            SentAt = DateTime.UtcNow,
+            SentAt = DateTime.UtcNow.AddHours(7),
             Status = "Active",
             IsFromAdmin = false
         };
@@ -140,7 +140,7 @@ public class ChatService : IChatService
         {
             UserId = targetUserId,       // stored under the user's conversation
             Message = message,
-            SentAt = DateTime.UtcNow,
+            SentAt = DateTime.UtcNow.AddHours(7),
             Status = "Active",
             IsFromAdmin = true
         };
@@ -165,6 +165,23 @@ public class ChatService : IChatService
             result.Add(saved);
         }
         return result;
+    }
+
+    public async Task ClearChatAsync(Guid userId)
+    {
+        lock (_lockObject)
+        {
+            // Clear in-memory cache
+            _userMessageCache.Remove(userId);
+
+            // Remove from pending messages (those not yet persisted)
+            _pendingMessages.RemoveAll(m => m.UserId == userId);
+        }
+
+        // Clear from database
+        using var scope = _serviceProvider.CreateScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IChatRepository>();
+        await repo.DeleteMessagesByUserIdAsync(userId);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

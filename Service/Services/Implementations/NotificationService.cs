@@ -53,7 +53,7 @@ public class NotificationService : INotificationService
             UserId = userId,
             Message = message,
             IsRead = false,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow.AddHours(7)
         };
 
         var createdNotification = await _notificationRepository.CreateAsync(notification);

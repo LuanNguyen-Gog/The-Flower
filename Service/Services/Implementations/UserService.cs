@@ -40,7 +40,7 @@ public class UserService : IUserService
             Address = dto.Address,
             Role = string.IsNullOrWhiteSpace(dto.Role) ? "Customer" : dto.Role,
             Status = "Active",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow.AddHours(7)
         };
 
         var created = await _userRepository.CreateAsync(user);

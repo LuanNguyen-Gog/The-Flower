@@ -62,7 +62,7 @@ public class OrderService : IOrderService
                     PaymentMethod = dto.PaymentMethod,
                     BillingAddress = dto.BillingAddress,
                     OrderStatus   = "Pending",
-                    OrderDate     = DateTime.UtcNow
+                    OrderDate     = DateTime.UtcNow.AddHours(7)
                 });
 
                 // Tạo Payment record
@@ -70,7 +70,7 @@ public class OrderService : IOrderService
                 {
                     OrderId       = order.OrderId,
                     Amount        = cart.TotalPrice,
-                    PaymentDate   = DateTime.UtcNow,
+                    PaymentDate   = DateTime.UtcNow.AddHours(7),
                     PaymentStatus = "Pending"
                 });
 
