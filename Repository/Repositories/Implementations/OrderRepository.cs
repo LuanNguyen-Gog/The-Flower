@@ -43,6 +43,16 @@ public class OrderRepository : IOrderRepository
             .OrderByDescending(o => o.OrderDate)
             .ToListAsync();
 
+    public async Task<IEnumerable<Order>> GetAllWithDetailsAsync()
+        => await _context.Orders
+            .Include(o => o.User)
+            .Include(o => o.Cart)
+            .ThenInclude(c => c!.CartItems)
+            .ThenInclude(ci => ci.Product)
+            .Include(o => o.Payments)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+
     public async Task<Payment?> GetPaymentByOrderIdAsync(Guid orderId)
         => await _context.Payments
             .FirstOrDefaultAsync(p => p.OrderId == orderId);

@@ -57,6 +57,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoreLocationService, StoreLocationService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // ── Chat Service ──────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IChatService, ChatService>();

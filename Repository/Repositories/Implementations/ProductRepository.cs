@@ -50,6 +50,9 @@ public class ProductRepository : IProductRepository
             .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.ProductId == id);
 
+    public async Task<IEnumerable<Product>> GetAllAsync()
+        => await _context.Products.Include(p => p.Category).ToListAsync();
+
     public async Task<IEnumerable<Category>> GetAllCategoriesAsync()
         => await _context.Categories
             .OrderBy(c => c.CategoryName)

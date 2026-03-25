@@ -10,6 +10,7 @@ public interface IProductRepository
         string? sortBy, string? sortOrder);
 
     Task<Product?> GetByIdAsync(Guid id);
+    Task<IEnumerable<Product>> GetAllAsync();
     Task<IEnumerable<Category>> GetAllCategoriesAsync();
     Task<Product> CreateAsync(Product product);
     Task<bool> UpdateAsync(Product product);

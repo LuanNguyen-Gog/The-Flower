@@ -228,11 +228,37 @@ public class OrderService : IOrderService
         return orders.Select(MapToDto);
     }
 
+    public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
+    {
+        var orders = await _orderRepository.GetAllWithDetailsAsync();
+        return orders.Select(MapToDto);
+    }
+
     public async Task<OrderDto?> GetOrderByIdAsync(Guid userId, Guid orderId)
     {
         var order = await _orderRepository.GetByIdWithDetailsAsync(orderId);
         if (order is null || order.UserId != userId) return null;
         return MapToDto(order);
+    }
+
+    public async Task UpdateOrderStatusAsync(Guid orderId, UpdateOrderStatusDto dto)
+    {
+        var order = await _orderRepository.GetByIdWithDetailsAsync(orderId)
+            ?? throw new KeyNotFoundException($"Order {orderId} not found.");
+
+        order.OrderStatus = dto.Status;
+        await _orderRepository.UpdateOrderAsync(order);
+        
+        // Notify user if possible
+        if (order.UserId.HasValue)
+        {
+            try
+            {
+                await _notificationService.SendNotificationAsync(order.UserId.Value, 
+                    $"Đơn hàng #{order.OrderId.ToString().ToUpper().Substring(0, 8)} của bạn đã được cập nhật trạng thái: {dto.Status}");
+            }
+            catch { /* Ignore notification failures */ }
+        }
     }
 
     private static OrderDto MapToDto(Order order) => new()

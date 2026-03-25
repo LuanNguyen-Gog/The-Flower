@@ -8,6 +8,7 @@ public interface IOrderRepository
     Task<Payment> CreatePaymentAsync(Payment payment);
     Task<Order?> GetByIdWithDetailsAsync(Guid orderId);
     Task<IEnumerable<Order>> GetByUserIdAsync(Guid userId);
+    Task<IEnumerable<Order>> GetAllWithDetailsAsync();
     Task<Payment?> GetPaymentByOrderIdAsync(Guid orderId);
     Task UpdateOrderAsync(Order order);
     Task UpdatePaymentAsync(Payment payment);

@@ -101,6 +101,76 @@ public class OrdersController : ControllerBase
     }
 
     /// <summary>
+    /// ADMIN: Lấy tất cả đơn hàng hệ thống
+    /// GET /api/orders/admin
+    /// </summary>
+    [HttpGet("admin")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAdminOrders()
+    {
+        try
+        {
+            var orders = await _orderService.GetAllOrdersAsync();
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "All orders retrieved successfully",
+                Data = orders
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
+
+    /// <summary>
+    /// ADMIN: Cập nhật trạng thái đơn hàng
+    /// PUT /api/orders/{id}/status
+    /// </summary>
+    [HttpPut("{id:guid}/status")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] UpdateOrderStatusDto dto)
+    {
+        try
+        {
+            await _orderService.UpdateOrderStatusAsync(id, dto);
+            return Ok(new ResponseDto
+            {
+                isSuccess = true,
+                Message = "Order status updated successfully",
+                Data = null
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ResponseDto
+            {
+                isSuccess = false,
+                Message = ex.Message,
+                Data = null
+            });
+        }
+    }
+
+    /// <summary>
     /// Lấy đơn hàng của một user cụ thể (sắp xếp từ mới nhất)
     /// GET /api/orders/user/{userId}
     /// </summary>
