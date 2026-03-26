@@ -10,6 +10,13 @@ public class DashboardStatsDto
     public int TotalProducts { get; set; }
     public List<TopProductDto> TopProducts { get; set; } = new();
     public List<OrderDto> RecentOrders { get; set; } = new();
+    public List<MonthlyRevenueDto> MonthlyRevenue { get; set; } = new();
+}
+
+public class MonthlyRevenueDto
+{
+    public string Month { get; set; } = string.Empty;
+    public double Revenue { get; set; }
 }
 
 public class TopProductDto

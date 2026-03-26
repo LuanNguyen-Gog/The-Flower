@@ -2,23 +2,24 @@ using Microsoft.AspNetCore.Mvc;
 using Service.DTOs.Maps;
 using Service.DTOs.Response;
 using Service.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TheFlower.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class MapsController : ControllerBase
+public class StoreLocationsController : ControllerBase
 {
     private readonly IStoreLocationService _locationService;
 
-    public MapsController(IStoreLocationService locationService)
+    public StoreLocationsController(IStoreLocationService locationService)
         => _locationService = locationService;
 
     /// <summary>
     /// Lấy tọa độ và địa chỉ tất cả cửa hàng
-    /// GET /api/maps/stores
+    /// GET /api/StoreLocations
     /// </summary>
-    [HttpGet("stores")]
+    [HttpGet]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStores()
     {
@@ -45,9 +46,9 @@ public class MapsController : ControllerBase
 
     /// <summary>
     /// Lấy chi tiết một cửa hàng theo ID
-    /// GET /api/maps/stores/{id}
+    /// GET /api/StoreLocations/{id}
     /// </summary>
-    [HttpGet("stores/{id:guid}")]
+    [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStore(Guid id)
@@ -82,10 +83,11 @@ public class MapsController : ControllerBase
     }
 
     /// <summary>
-    /// Tạo cửa hàng mới - Backend tự động geocode địa chỉ thành lat/long
-    /// POST /api/maps/stores
+    /// Tạo cửa hàng mới (Chỉ Admin)
+    /// POST /api/StoreLocations
     /// </summary>
-    [HttpPost("stores")]
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateStore([FromBody] CreateStoreLocationDto dto)
@@ -101,7 +103,7 @@ public class MapsController : ControllerBase
                 });
 
             var result = await _locationService.CreateAsync(dto);
-            return CreatedAtAction("GetStore", new { id = result.LocationId }, new ResponseDto
+            return CreatedAtAction(nameof(GetStore), new { id = result.LocationId }, new ResponseDto
             {
                 isSuccess = true,
                 Message = "Store created successfully",
@@ -120,10 +122,11 @@ public class MapsController : ControllerBase
     }
 
     /// <summary>
-    /// Cập nhật thông tin cửa hàng - Backend sẽ geocode địa chỉ mới
-    /// PUT /api/maps/stores/{id}
+    /// Cập nhật thông tin cửa hàng (Chỉ Admin)
+    /// PUT /api/StoreLocations/{id}
     /// </summary>
-    [HttpPut("stores/{id:guid}")]
+    [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateStore(Guid id, [FromBody] UpdateStoreLocationDto dto)
@@ -174,10 +177,11 @@ public class MapsController : ControllerBase
     }
 
     /// <summary>
-    /// Xóa cửa hàng (soft delete - đặt status thành InActive)
-    /// DELETE /api/maps/stores/{id}
+    /// Xóa cửa hàng (Chỉ Admin)
+    /// DELETE /api/StoreLocations/{id}
     /// </summary>
-    [HttpDelete("stores/{id:guid}")]
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ResponseDto), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteStore(Guid id)

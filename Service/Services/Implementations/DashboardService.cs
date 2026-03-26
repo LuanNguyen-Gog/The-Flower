@@ -45,6 +45,24 @@ public class DashboardService : IDashboardService
             .Take(5)
             .ToList();
 
+        // Monthly revenue calculation (Last 6 months)
+        var monthlyRevenue = new List<MonthlyRevenueDto>();
+        for (int i = 5; i >= 0; i--)
+        {
+            var date = DateTime.Now.AddMonths(-i);
+            var monthName = date.ToString("MMM yyyy");
+            
+            var monthlySales = paidOrders
+                .Where(o => o.OrderDate.Month == date.Month && o.OrderDate.Year == date.Year)
+                .Sum(o => o.Payments.FirstOrDefault(p => p.PaymentStatus == "Success" || p.PaymentStatus == "COD")?.Amount ?? 0);
+
+            monthlyRevenue.Add(new MonthlyRevenueDto
+            {
+                Month = monthName,
+                Revenue = (double)monthlySales
+            });
+        }
+
         return new DashboardStatsDto
         {
             TotalSales = (double)totalSales,
@@ -52,7 +70,8 @@ public class DashboardService : IDashboardService
             TotalUsers = allUsers.Count,
             TotalProducts = allProducts.Count(),
             TopProducts = topProducts,
-            RecentOrders = allOrders.Take(5).Select(MapToOrderDto).ToList()
+            RecentOrders = allOrders.Take(5).Select(MapToOrderDto).ToList(),
+            MonthlyRevenue = monthlyRevenue
         };
     }
 

@@ -206,6 +206,41 @@ public partial class SalesAppDBContext : DbContext
                 .HasMaxLength(255);
             entity.Property(e => e.Latitude).HasColumnType("decimal(9, 6)");
             entity.Property(e => e.Longitude).HasColumnType("decimal(9, 6)");
+
+            entity.HasData(
+                new StoreLocation
+                {
+                    LocationId = new Guid("4b2f1e5a-7c3d-4a1b-8e9f-0d1c2b3a4e5f"),
+                    Address = "Bitexco Financial Tower, 2 Hải Triều, Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+                    Latitude = 10.771500m,
+                    Longitude = 106.704100m,
+                    Status = "Active"
+                },
+                new StoreLocation
+                {
+                    LocationId = new Guid("a7c8d9e0-f1a2-b3c4-d5e6-f7a8b9c0d1e2"),
+                    Address = "Landmark 81, 720A Điện Biên Phủ, Vinhomes Tân Cảng, Bình Thạnh, TP. Hồ Chí Minh",
+                    Latitude = 10.795000m,
+                    Longitude = 106.721800m,
+                    Status = "Active"
+                },
+                new StoreLocation
+                {
+                    LocationId = new Guid("b2c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7"),
+                    Address = "Chợ Bến Thành, Lê Lợi, Bến Thành, Quận 1, TP. Hồ Chí Minh",
+                    Latitude = 10.771900m,
+                    Longitude = 106.698300m,
+                    Status = "Active"
+                },
+                new StoreLocation
+                {
+                    LocationId = new Guid("c3d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8"),
+                    Address = "SC VivoCity, 1058 Nguyễn Văn Linh, Tân Phong, Quận 7, TP. Hồ Chí Minh",
+                    Latitude = 10.729400m,
+                    Longitude = 106.707600m,
+                    Status = "Active"
+                }
+            );
         });
 
         modelBuilder.Entity<User>(entity =>

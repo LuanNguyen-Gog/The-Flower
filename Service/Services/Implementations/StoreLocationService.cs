@@ -24,7 +24,8 @@ public class StoreLocationService : IStoreLocationService
             LocationId = l.LocationId,
             Latitude = l.Latitude,
             Longitude = l.Longitude,
-            Address = l.Address
+            Address = l.Address,
+            Status = l.Status
         });
     }
 
@@ -38,7 +39,8 @@ public class StoreLocationService : IStoreLocationService
             LocationId = l.LocationId,
             Latitude = l.Latitude,
             Longitude = l.Longitude,
-            Address = l.Address
+            Address = l.Address,
+            Status = l.Status
         };
     }
 
@@ -61,7 +63,8 @@ public class StoreLocationService : IStoreLocationService
             LocationId = createdLocation.LocationId,
             Latitude = createdLocation.Latitude,
             Longitude = createdLocation.Longitude,
-            Address = createdLocation.Address
+            Address = createdLocation.Address,
+            Status = createdLocation.Status
         };
     }
 
@@ -76,6 +79,7 @@ public class StoreLocationService : IStoreLocationService
         existingLocation.Address = dto.Address;
         existingLocation.Latitude = latitude;
         existingLocation.Longitude = longitude;
+        existingLocation.Status = dto.Status;
 
         return await _locationRepository.UpdateAsync(existingLocation);
     }
